@@ -29,6 +29,8 @@ esphomeyaml powermeter.yaml run # uploads and connects you to the running node
 * RGB LCD display
 * upgrade all sensors to at least DHT22
 * move to two internal sensors, one external
+* when the new enclosure comes, add basic fan control to ventilate if too humid or too hot
+* setup LED strip control of the new enclosure, plus external buttons
 
 ### `powermeter`
 * wio_link (should move to a node)
