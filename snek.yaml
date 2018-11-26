@@ -1,0 +1,58 @@
+esphomeyaml:
+  name: snek
+  platform: ESP8266
+  board: wio_link
+  # GPIO15 needs to be on for the grove bus to get power
+  on_boot:
+    priority: -10
+    then:
+      - switch.turn_on: 'grove_power_supply'
+
+# Example configuration entry
+sensor:
+  - platform: dht
+    # Digital Port 2
+    pin: GPIO13
+    model: DHT11
+    temperature:
+      name: "Snek Enclosure (external) Temperature"
+    humidity:
+      name: "Snek Enclosure (external) Humidity"
+    update_interval: 15s
+  - platform: dht
+    pin: GPIO12
+    temperature:
+      name: "Snek Enclosure (internal) Temperature"
+    humidity:
+      name: "Snek Enclosure (internal) Humidity"
+    update_interval: 15s
+  - platform: dht
+    pin: GPIO14
+    model: DHT11
+    temperature:
+      name: "Snek Enclosure (external #2) Temperature"
+    humidity:
+      name: "Snek Enclosure (external #2) Humidity"
+    update_interval: 15s
+  - platform: uptime
+    name: Uptime Sensor
+
+switch:
+  - platform: gpio
+    pin: GPIO15
+    id: 'grove_power_supply'
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: !secret wifi_domain
+
+mqtt:
+  broker: '192.168.178.127'
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+
+# Enable logging
+logger:
+
+ota:
