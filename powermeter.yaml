@@ -20,6 +20,13 @@ sensor:
     update_interval: 15s
   - platform: uptime
     name: powermeter Uptime Sensor
+    # I think this is the middle pin
+  - platform: pulse_counter
+    pin: GPIO12
+    unit_of_measurement: 'kW'
+    name: 'Power Meter'
+    filters:
+      - multiply: 0.06
 
 switch:
   - platform: gpio
