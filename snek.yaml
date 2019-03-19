@@ -1,10 +1,10 @@
-esphomeyaml:
+esphome:
   name: snek
   platform: ESP8266
   board: wio_link
   # GPIO15 needs to be on for the grove bus to get power
   on_boot:
-    priority: -10
+    priority: 100
     then:
       - switch.turn_on: 'grove_power_supply'
 
@@ -36,11 +36,24 @@ sensor:
     update_interval: 15s
   - platform: uptime
     name: Uptime Sensor
+  - platform: sht3xd
+    temperature: 
+      name: "Snek Enclosure (ext SHT31 ) Temperature"
+    humidity:
+      name: "Snek Enclosure (ext SHT31 ) Humidity"
+    address: 0x11
+    update_interval: 15s
 
 switch:
   - platform: gpio
     pin: GPIO15
     id: 'grove_power_supply'
+
+i2c:
+  sda: GPIO4
+  scl: GPIO5
+  scan: True
+
 
 wifi:
   ssid: !secret wifi_ssid
