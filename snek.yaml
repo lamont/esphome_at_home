@@ -4,7 +4,7 @@ esphome:
   board: wio_link
   # GPIO15 needs to be on for the grove bus to get power
   on_boot:
-    priority: 100
+    priority: 99
     then:
       - switch.turn_on: 'grove_power_supply'
 
@@ -13,7 +13,6 @@ sensor:
   - platform: dht
     # Digital Port 2
     pin: GPIO13
-    model: DHT11
     temperature:
       name: "Snek Enclosure (external) Temperature"
     humidity:
@@ -28,7 +27,6 @@ sensor:
     update_interval: 15s
   - platform: dht
     pin: GPIO14
-    model: DHT11
     temperature:
       name: "Snek Enclosure (external #2) Temperature"
     humidity:
@@ -36,24 +34,11 @@ sensor:
     update_interval: 15s
   - platform: uptime
     name: Uptime Sensor
-  - platform: sht3xd
-    temperature: 
-      name: "Snek Enclosure (ext SHT31 ) Temperature"
-    humidity:
-      name: "Snek Enclosure (ext SHT31 ) Humidity"
-    address: 0x11
-    update_interval: 15s
 
 switch:
   - platform: gpio
     pin: GPIO15
     id: 'grove_power_supply'
-
-i2c:
-  sda: GPIO4
-  scl: GPIO5
-  scan: True
-
 
 wifi:
   ssid: !secret wifi_ssid
