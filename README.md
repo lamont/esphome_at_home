@@ -1,10 +1,14 @@
 # esphomeyaml deployed IOT fleet for home
 
-This repo tracks the various ESP32 and ESP8522 devices I have deployed about the 
+This repo tracks the various ESP32 and ESP8622 devices I have deployed about the 
 house.
 
 ### Setup
-In any case, you nee the venv setup properly
+
+I've switched to a docker setup, so just `. aliases` and you'll have access to the functions and images 
+without needing all the venv stuff I stared using. But for posterity:
+
+In any case, you need the venv setup properly
 ```bash
 . venv/bin/activate
 ```
@@ -42,6 +46,13 @@ esphomeyaml powermeter.yaml run # uploads and connects you to the running node
 * light sensor to determine when light is off/on
 * IR/contact sensor to see if garage is open or closed
 * Motion sensor?
+
+### `plants`
+* Adafruit ESP32 Feather
+* LiPo battery powered, solar panel charging
+* deep sleep setup, 2min on, 8min sleep. (change to 1m on, 1h sleep)
+* uses MQTT rather than the API as that works better with deep sleep
+* (eventually setup the soil moisture sensors with power switching)
 
 ### Secrets
 
