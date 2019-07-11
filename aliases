@@ -1,0 +1,11 @@
+VERSION=1.13.6
+alias update="docker pull esphome/esphome:$VERSION"
+
+DOCKER_ARGS="-ti --rm -v ${PWD}:/config esphome/esphome:$VERSION"
+compile() { docker run $DOCKER_ARGS "$1" compile; }
+run() { docker run $DOCKER_ARGS "$1" run; }
+usb_run() { docker run $DOCKER_ARGS "$1" run; }
+logs() { docker run $DOCKER_ARGS "$1" logs; }
+dashboard() { docker run -p 6052:6052 --net=host $DOCKER_ARGS; }
+
+alias esphome='docker run --rm -v "${PWD}":/config --net=host -it esphome/esphome'
