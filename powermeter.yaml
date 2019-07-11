@@ -1,4 +1,4 @@
-esphomeyaml:
+esphome:
   name: powermeter
   platform: ESP8266
   board: wio_link
