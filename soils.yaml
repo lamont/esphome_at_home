@@ -1,7 +1,8 @@
 esphome:
-  name: plants
+  name: soils
   platform: esp32
-  board: featheresp32
+  board: pocket_32
+  arduino_version: 1.0.2
 
 ota:
 
@@ -27,9 +28,6 @@ sensor:
       - calibrate_linear:
           - 2.7 -> 0
           - 4.64952 -> 100
-  - platform: uptime
-    name: Uptime Sensor
-    update_interval: 10s
   - platform: wifi_signal
     name: "WiFi Signal Sensor"
     update_interval: 10s
@@ -38,10 +36,6 @@ sensor:
     update_interval: '10s'
     filters:
       - lambda: return (id(sntp_time).now()).time;
-
-deep_sleep:
-  run_duration: 2min
-  sleep_duration: 8min
 
 wifi:
   ssid: !secret wifi_ssid

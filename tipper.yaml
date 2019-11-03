@@ -1,5 +1,8 @@
+substitutions:
+  devicename: tipper
+
 esphome:
-  name: testsoil 
+  name: $devicename
   platform: ESP8266
   board: wio_link
   # GPIO15 needs to be on for the grove bus to get power
@@ -11,20 +14,20 @@ esphome:
 # Example configuration entry
 sensor:
   - platform: uptime
-    name: Uptime Sensor
+    name: ${devicename} Uptime Sensor
   - platform: adc
-    name: moisture
+    name: ${devicename} moisture
     pin: A0
     update_interval: '10s'
   - platform: template
-    name: last_update
+    name: ${devicename} last update
     id: template_sens
     update_interval: '10s'
     unit_of_measurement: 's'
     filters:
       - lambda: return (id(sntp_time).now()).time;
   - platform: wifi_signal
-    name: "WiFi Signal Sensor"
+    name: "${devicename} WiFi Signal Sensor"
     update_interval: 10s
 
 switch:
@@ -37,7 +40,10 @@ wifi:
   password: !secret wifi_password
   domain: !secret wifi_domain
 
-api:
+mqtt:
+  broker: '192.168.178.127'
+  username: !secret mqtt_username
+  password: !secret mqtt_password
 
 deep_sleep:
   run_duration: 1min
@@ -54,3 +60,4 @@ time:
     timezone: 'America/Los_Angeles'
     servers:
       - 192.168.178.1
+      - 192.168.178.5

@@ -21,8 +21,15 @@ sensor:
   - platform: uptime
     name: powermeter Uptime Sensor
     # I think this is the middle pin
-  - platform: pulse_counter
+  - platform: dht
+    model: DHT22
     pin: GPIO12
+    temperature:
+      name: "Weed Temperature"
+    humidity:
+      name: "Weed Humidity"
+  - platform: pulse_counter
+    pin: GPIO13
     unit_of_measurement: 'kW'
     name: 'Power Meter'
     filters:
