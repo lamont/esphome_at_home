@@ -30,7 +30,7 @@ sensor:
       name: "Weed Humidity"
   - platform: pulse_counter
     pin: GPIO13
-    unit_of_measurement: 'kW'
+    unit_of_measurement: 'watts'
     name: 'Power Meter'
     filters:
       - multiply: 0.06
