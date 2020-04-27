@@ -14,31 +14,31 @@ sensor:
     # Digital Port 2
     pin: GPIO13
     temperature:
-      name: "Snek Enclosure (external) Temperature"
+      name: "Snek midpoint internal ground temperature"
     humidity:
-      name: "Snek Enclosure (external) Humidity"
+      name: "Snek midpoint internal ground humidity"
     update_interval: 15s
   - platform: dht
     pin: GPIO12
     temperature:
-      name: "Snek Enclosure (internal) Temperature"
+      name: "Snek right internal ground temperature"
     humidity:
-      name: "Snek Enclosure (internal) Humidity"
+      name: "Snek right internal ground humidity"
     update_interval: 15s
   - platform: dht
     pin: GPIO14
     temperature:
-      name: "Snek Enclosure (external #2) Temperature"
+      name: "Snek external temperature"
     humidity:
-      name: "Snek Enclosure (external #2) Humidity"
+      name: "Snek external humidity"
     update_interval: 15s
   - platform: uptime
     name: Uptime Sensor
   - platform: sht3xd
     temperature:
-      name: "Snake Room Temperature"
+      name: "Snek internal midpoint temperature"
     humidity:
-      name: "Snake Room Humidity"
+      name: "Snek internal midpoint humidity"
     address: 0x44
     update_interval: 15s
 
