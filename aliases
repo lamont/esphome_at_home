@@ -1,4 +1,4 @@
-VERSION=1.14.3
+VERSION=1.15.3
 alias update="docker pull esphome/esphome:$VERSION"
 
 DOCKER_ARGS="-ti --rm -v ${PWD}:/config esphome/esphome:$VERSION"
@@ -7,5 +7,6 @@ run() { docker run $DOCKER_ARGS "$1" run; }
 usb_run() { docker run $DOCKER_ARGS "$1" run; }
 logs() { docker run $DOCKER_ARGS "$1" logs; }
 dashboard() { docker run -p 6052:6052 --net=host $DOCKER_ARGS; }
+flash() { docker run --device=/dev/cu.SLAB_USBtoUART $DOCKER_ARGS "$1" upload --upload-port /dev/cu.SLAB_USBtoUART; }
 
 alias esphome='docker run --rm -v "${PWD}":/config --net=host -it esphome/esphome'
