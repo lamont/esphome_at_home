@@ -1,0 +1,61 @@
+# IR blaster meant to relay light settings to an IR controllable 
+# https://www.e-tinkers.com/2019/11/build-an-esp32-web-server-and-ir-remote/
+
+esphome:
+  name: blaster
+  platform: ESP32 
+  board: lolin32
+
+
+web_server:
+  port: 80
+
+prometheus:
+  
+sensor:
+  - platform: uptime
+    name: blaster Uptime Sensor
+
+light:
+  - platform: fastled_clockless
+    chipset: WS2812
+    pin: GPIO22
+    num_leds: 60
+    rgb_order: BRG
+    name: "FastLED WS2811 Light strand 1"
+  - platform: fastled_clockless
+    chipset: WS2812
+    pin: GPIO23
+    num_leds: 60
+    rgb_order: BRG
+    name: "FastLED WS2811 Light strand 2"
+  - platform: fastled_clockless
+    chipset: WS2812
+    pin: GPIO25
+    num_leds: 60
+    rgb_order: BRG
+    name: "FastLED WS2811 Light strand 3"
+  - platform: fastled_clockless
+    chipset: WS2812
+    pin: GPIO26
+    num_leds: 60
+    rgb_order: BRG
+    name: "FastLED WS2811 Light strand 4"
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: !secret wifi_domain
+
+mqtt:
+  broker: '192.168.178.127'
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+
+# Enable logging
+logger:
+
+ota:
+
+api:
+
