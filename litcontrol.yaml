@@ -14,7 +14,7 @@ prometheus:
 binary_sensor:
   - platform: gpio
     pin: 
-      number: GPIO12
+      number: GPIO13
       inverted: True
       mode: INPUT_PULLUP
     name: "prg1 All Off"
@@ -27,7 +27,7 @@ binary_sensor:
         - logger.log: "All Off"
   - platform: gpio
     pin: 
-      number: GPIO13
+      number: GPIO12
       inverted: True
       mode: INPUT_PULLUP
     name: "prg2 Night Vision"
@@ -42,7 +42,7 @@ binary_sensor:
         - logger.log: "Night Vision"
   - platform: gpio
     pin:
-      number: GPIO14
+      number: GPIO27
       inverted: True
       mode: INPUT_PULLUP
     name: "prg3 Cozy Firelight"
@@ -70,7 +70,7 @@ binary_sensor:
         - logger.log: "Cozy Firelight"
   - platform: gpio
     pin:
-      number: GPIO15
+      number: GPIO33
       inverted: True
       mode: INPUT_PULLUP
     name: "prg3 Blinding Light"
@@ -104,7 +104,7 @@ light:
     name: "Zone 1 - Console Lights"
     color_correct: [50%, 50%, 50%] # never exceed half power
     chipset: WS2812
-    pin: GPIO25
+    pin: GPIO23
     num_leds: 75
     rgb_order: BRG
   - platform: fastled_clockless
@@ -112,7 +112,7 @@ light:
     name: "Zone 2 - Cabin Lights"
     color_correct: [50%, 50%, 50%] # never exceed half power
     chipset: WS2812
-    pin: GPIO26
+    pin: GPIO22
     num_leds: 61
     rgb_order: BRG
   - platform: fastled_clockless
@@ -120,7 +120,7 @@ light:
     name: "Zone 3 - Cockpit Lights"
     color_correct: [50%, 50%, 50%] # never exceed half power
     chipset: WS2812
-    pin: GPIO27
+    pin: GPIO14
     num_leds: 48
     rgb_order: BRG
 
