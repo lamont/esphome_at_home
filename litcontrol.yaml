@@ -54,19 +54,19 @@ binary_sensor:
             red: 45%
             green: 24%
             blue: 12%
-            effect: flicker
+            effect: addressable_flicker
         - light.turn_on:
             id: zone2
             red: 45%
             green: 24%
             blue: 12%
-            effect: flicker
+            effect: addressable_flicker
         - light.turn_on:
             id: zone3
             red: 45%
             green: 24%
             blue: 12%
-            effect: flicker
+            effect: addressable_flicker
         - logger.log: "Cozy Firelight"
   - platform: gpio
     pin:
@@ -106,7 +106,9 @@ light:
     chipset: WS2812
     pin: GPIO23
     num_leds: 75
-    rgb_order: BRG
+    rgb_order: RGB
+    effects:
+      - addressable_flicker:
   - platform: fastled_clockless
     id: zone2
     name: "Zone 2 - Cabin Lights"
@@ -114,7 +116,9 @@ light:
     chipset: WS2812
     pin: GPIO22
     num_leds: 61
-    rgb_order: BRG
+    rgb_order: RGB
+    effects:
+      - addressable_flicker:
   - platform: fastled_clockless
     id: zone3
     name: "Zone 3 - Cockpit Lights"
@@ -122,7 +126,9 @@ light:
     chipset: WS2812
     pin: GPIO14
     num_leds: 48
-    rgb_order: BRG
+    rgb_order: RGB
+    effects:
+      - addressable_flicker:
 
 wifi:
   ssid: !secret wifi_ssid
