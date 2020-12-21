@@ -36,9 +36,12 @@ binary_sensor:
       then:
         - light.addressable_set:
             id: zone1
-            red: 20%
-            green: 0%
-            blue: 0%
+            red: !lambda |-
+              return id(dim_red).red;
+            green: !lambda |-
+              return id(dim_red).green;
+            blue: !lambda |-
+              return id(dim_red).blue;
         - logger.log: "Night Vision"
   - platform: gpio
     pin:
@@ -51,22 +54,31 @@ binary_sensor:
       then:
         - light.turn_on:
             id: zone1
-            red: 45%
-            green: 24%
-            blue: 12%
-            effect: addressable_flicker
+            red: !lambda |-
+              return id(campfire_orange).red;
+            green: !lambda |-
+              return id(campfire_orange).green;
+            blue: !lambda |-
+              return id(campfire_orange).blue;
+            effect: firelight
         - light.turn_on:
             id: zone2
-            red: 45%
-            green: 24%
-            blue: 12%
-            effect: addressable_flicker
+            red: !lambda |-
+              return id(campfire_orange).red;
+            green: !lambda |-
+              return id(campfire_orange).green;
+            blue: !lambda |-
+              return id(campfire_orange).blue;
+            effect: firelight
         - light.turn_on:
             id: zone3
-            red: 45%
-            green: 24%
-            blue: 12%
-            effect: addressable_flicker
+            red: !lambda |-
+              return id(campfire_orange).red;
+            green: !lambda |-
+              return id(campfire_orange).green;
+            blue: !lambda |-
+              return id(campfire_orange).blue;
+            effect: firelight
         - logger.log: "Cozy Firelight"
   - platform: gpio
     pin:
@@ -94,6 +106,16 @@ binary_sensor:
             blue: 100%
         - logger.log: "Blinding Light"
 
+color:
+  - id: dim_red
+    red: 20%
+    green: 0%
+    blue: 0%
+  - id: campfire_orange
+    red: 45%
+    green: 24%
+    blue: 12%
+
 sensor:
   - platform: uptime
     name: litcontrol Uptime Sensor
@@ -103,32 +125,41 @@ light:
     id: zone1
     name: "Zone 1 - Console Lights"
     color_correct: [50%, 50%, 50%] # never exceed half power
-    chipset: WS2812
+    chipset: WS2812B
+    default_transition_length: 0.1s
     pin: GPIO23
     num_leds: 75
-    rgb_order: RGB
+    rgb_order: BGR
     effects:
       - addressable_flicker:
+          name: firelight
+          intensity: 15%
   - platform: fastled_clockless
     id: zone2
     name: "Zone 2 - Cabin Lights"
     color_correct: [50%, 50%, 50%] # never exceed half power
-    chipset: WS2812
+    chipset: WS2812B
+    default_transition_length: 0.1s
     pin: GPIO22
     num_leds: 61
-    rgb_order: RGB
+    rgb_order: BGR
     effects:
       - addressable_flicker:
+          name: firelight
+          intensity: 15%
   - platform: fastled_clockless
     id: zone3
     name: "Zone 3 - Cockpit Lights"
     color_correct: [50%, 50%, 50%] # never exceed half power
-    chipset: WS2812
+    chipset: WS2812B
+    default_transition_length: 0.1s
     pin: GPIO14
     num_leds: 48
-    rgb_order: RGB
+    rgb_order: BGR
     effects:
       - addressable_flicker:
+          name: firelight
+          intensity: 15%
 
 wifi:
   ssid: !secret wifi_ssid
