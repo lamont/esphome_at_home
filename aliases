@@ -1,4 +1,4 @@
-VERSION=1.15.3
+VERSION=1.16.0
 alias update="docker pull esphome/esphome:$VERSION"
 
 DOCKER_ARGS="-ti --rm -v ${PWD}:/config esphome/esphome:$VERSION"
