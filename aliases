@@ -1,12 +1,12 @@
-VERSION=1.16.0
+VERSION=2022.6.1
 alias update="docker pull esphome/esphome:$VERSION"
 
 DOCKER_ARGS="-ti --rm -v ${PWD}:/config esphome/esphome:$VERSION"
-compile() { docker run $DOCKER_ARGS "$1" compile; }
-run() { docker run $DOCKER_ARGS "$1" run; }
+compile() { docker run $DOCKER_ARGS compile "$1" ; }
+run() { docker run $DOCKER_ARGS run "$1"; }
 usb_run() { docker run $DOCKER_ARGS "$1" run; }
-logs() { docker run $DOCKER_ARGS "$1" logs; }
+logs() { docker run $DOCKER_ARGS logs "$1" ; }
 dashboard() { docker run -p 6052:6052 --net=host $DOCKER_ARGS; }
-flash() { docker run --device=/dev/cu.SLAB_USBtoUART $DOCKER_ARGS "$1" upload --upload-port /dev/cu.SLAB_USBtoUART; }
+flash() { docker run --device=/dev/cu.SLAB_USBtoUART $DOCKER_ARGS upload "$1" --upload-port /dev/cu.SLAB_USBtoUART; }
 
 alias esphome='docker run --rm -v "${PWD}":/config --net=host -it esphome/esphome'
