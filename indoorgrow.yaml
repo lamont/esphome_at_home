@@ -1,0 +1,84 @@
+## Indoor grow tent tensiometer via hx710b (hx711 compat), CCS811/BME280 and (more accurate) scd-40 ##
+# https://learn.sparkfun.com/tutorials/esp32-s2-thing-plus-hookup-guide
+esphome:
+  name: indoorgrow
+  comment: tensiometer and environmental sensors for an indoor grow tent
+
+esp32:
+  board: esp32thing_plus
+
+globals:
+  - id: open_tube
+    type: float
+    restore_value: yes
+    initial_value: "7777" # measure the open tube pressure and record it here
+
+i2c:
+  scan: true
+  # labeled as SDA/SCL but also on the Qwiic connector
+  sda: GPIO23
+  scl: GPIO22
+
+
+sensor:
+  - platform: scd4x
+    co2:
+      name: "scd-40 CO2"
+    temperature:
+      name: "scd-40 Temperature"
+    humidity:
+      name: "scd-40 Humidity"
+    ambient_pressure_compensation_source: bme_pressure
+    update_interval: 15s
+  - platform: hx711
+    name: "Tensiometer Tube Pressure"
+    # upper right side A5/A0 with usb down
+    dout_pin: GPIO05 # A5
+    clk_pin: GPIO17  # A0
+    gain: 128
+    update_interval: 60s
+  - platform: ccs811
+    baseline: 0x98BE # pulled from the logs of the running device after 20-30 minutes
+    temperature: bme_temp # use the external temperature sensor to improve these results
+    humidity: bme_humidity # same with humidity from the bme
+    eco2:
+      name: "CCS811 eCO2 Value"
+    tvoc:
+      name: "CCS811 Total Volatile Organic Compound"
+    address: 0x5B
+    update_interval: 60s
+    # temperature: external temperature sensor ID
+  - platform: bme280
+    temperature:
+      name: "BME280-1 Temperature"
+      id: bme_temp
+      oversampling: 16x
+    pressure:
+      name: "BME280-1 Pressure"
+      id: bme_pressure
+    humidity:
+      name: "BME280-1 Humidity"
+      id: bme_humidity
+    # Address is not default!
+    address: 0x77
+    update_interval: 15s
+
+wifi:
+  fast_connect: True
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: !secret wifi_domain
+
+mqtt:
+  broker: '192.168.178.127'
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: !secret ota_password
