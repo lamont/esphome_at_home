@@ -1,0 +1,39 @@
+# Olimex PoE esp32 (isolated)
+# can it ble while running a wired ip stack?
+
+# Enable Home Assistant API
+api:
+
+# enabling the ble disable the wifi, not enough memory maybe
+esp32_ble_tracker:
+
+text_sensor:
+  - platform: ble_scanner
+    name: "ble0 BLE Devices Scanner"
+
+esphome:
+  name: ble0
+  platform: ESP32
+  board: esp32-poe
+
+ethernet:
+  type: LAN8720
+  mdc_pin: GPIO23
+  mdio_pin: GPIO18
+  clk_mode: GPIO17_OUT
+  phy_addr: 0
+  power_pin: GPIO12
+  domain: .henry.st
+
+# Enable logging
+logger:
+  # very_verbose is verbose indeed, dropping details about each BLE adv it sees
+  # level: VERY_VERBOSE
+
+mqtt:
+  broker: '192.168.178.127'
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+
+ota:
+  password: !secret ota_password
