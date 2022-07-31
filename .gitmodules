@@ -1,0 +1,3 @@
+[submodule "includes/AMG8833-ESPHOME"]
+	path = includes/AMG8833-ESPHOME
+	url = git@github.com:TheRealWaldo/AMG8833-ESPHOME.git
