@@ -1,8 +1,12 @@
 ## Indoor grow tent tensiometer via hx710b (hx711 compat), CCS811/BME280 and (more accurate) scd-40 ##
 # https://learn.sparkfun.com/tutorials/esp32-s2-thing-plus-hookup-guide
+# TMP117 temperature via https://esphome.io/components/sensor/tmp117.html
+# SHT40 temperature/humidity
+# CCS811/BME280 environment combo sensor
+# BH1750 ambient light sensor - https://esphome.io/components/sensor/bh1750.html
 esphome:
   name: indoorgrow
-  comment: tensiometer and environmental sensors for an indoor grow tent
+  comment: tensiometer and environmental sensors for an indoor grow tent, under canopy
 
 esp32:
   board: esp32thing_plus
@@ -23,15 +27,15 @@ i2c:
 sensor:
   - platform: scd4x
     co2:
-      name: "scd-40 CO2"
+      name: "Weed Undercanopy scd-41 CO2"
     temperature:
-      name: "scd-40 Temperature"
+      name: "Weed Undercanopy scd-41 Temperature"
     humidity:
-      name: "scd-40 Humidity"
+      name: "Weed Undercanopy scd-41 Humidity"
     ambient_pressure_compensation_source: bme_pressure
     update_interval: 15s
   - platform: hx711
-    name: "Tensiometer Tube Pressure"
+    name: "Indoor Earthbox Tensiometer Tube Pressure"
     unit_of_measurement: hpa
     device_class: "pressure"
     state_class: "measurement"
@@ -57,18 +61,29 @@ sensor:
     # temperature: external temperature sensor ID
   - platform: bme280
     temperature:
-      name: "BME280-1 Temperature"
+      name: "Weed Undercanopy BME280 Temperature"
       id: bme_temp
       oversampling: 16x
     pressure:
-      name: "BME280-1 Pressure"
+      name: "Weed Undercanopy BME280 Pressure"
       id: bme_pressure
     humidity:
-      name: "BME280-1 Humidity"
+      name: "Weed Undercanopy BME280 Humidity"
       id: bme_humidity
     # Address is not default!
     address: 0x77
     update_interval: 15s
+  - platform: tmp117
+    name: "Weed Undercanopy TMP117 Temperature"
+    update_interval: 15s
+  - platform: bh1750
+    name: "Weed Undercanopy BH1750 Illuminance"
+    address: 0x23
+    update_interval: 15s
+    filters:
+      - sliding_window_moving_average:
+          window_size: 3
+          send_every: 1
 
 wifi:
   fast_connect: True
