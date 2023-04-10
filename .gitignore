@@ -9,6 +9,7 @@
 !aliases
 !/includes
 !/includes/AMG8833-ESPHOME
+!/common_yaml/home.yaml
 !Pipfile
 !Pipfile.lock
 
