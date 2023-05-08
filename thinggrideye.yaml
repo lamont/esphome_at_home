@@ -1,0 +1,98 @@
+# esp32thingplus test platform
+# testbed for stuff like the AMG8833 8x8 IR thermal sensor
+
+esphome:
+  name: thinggrideye
+  includes:
+    - includes/AMG8833-ESPHOME/amg8833.h
+    - includes/AMG8833-ESPHOME/amg8833_camera.h
+    #- includes/AMG8833-ESPHOME/amg8833_person_detected.h
+  libraries:
+    - "Wire"
+    - "SparkFun GridEYE AMG88 Library"
+esp32:
+  board: esp32thing_plus
+
+i2c:
+  scan: true
+  # labeled as SDA/SCL but also on the Qwiic connector
+  sda: GPIO23
+  scl: GPIO22
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: !secret ota_password
+
+wifi:
+  fast_connect: True
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: !secret wifi_domain
+
+mqtt:
+  broker: '192.168.178.127'
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+
+text_sensor:
+  - platform: custom
+    lambda: |-
+      auto amg8833 = new AMG8833CameraComponent();
+      App.register_component(amg8833);
+      return {amg8833};
+    text_sensors:
+      - name: "Sensor Pixels"
+
+#binary_sensor:
+#  - platform: custom
+#    lambda: |-
+#      auto amg8833 = new AMG8833PersonDetectedComponent();
+#      App.register_component(amg8833);
+#      return {amg8833};
+#    binary_sensors:
+#      name: "Person Detected"
+#      device_class: occupancy
+
+sensor:
+#  - platform: thermal_vision
+#    name: Prototype Thermal Camera
+#    overlay: true
+#    pixel_sensor: sensor.sensor_pixels
+#    auto_range: true
+  - platform: custom
+    lambda: |-
+      auto amg8833 = new AMG8833Component();
+      App.register_component(amg8833);
+      return {amg8833->sensor_temperature, amg8833->max_temperature, amg8833->min_temperature, amg8833->avg_temperature, amg8833->min_index, amg8833->max_index};
+    sensors:
+      - name: "Thermal Sensor Temperature"
+        unit_of_measurement: °C
+        device_class: temperature
+        accuracy_decimals: 2
+
+      - name: "Thermal Sensor Max"
+        unit_of_measurement: °C
+        device_class: temperature
+        accuracy_decimals: 2
+
+      - name: "Thermal Sensor Min"
+        unit_of_measurement: °C
+        device_class: temperature
+        accuracy_decimals: 2
+
+      - name: "Thermal Sensor Avg"
+        unit_of_measurement: °C
+        device_class: temperature
+        accuracy_decimals: 2
+
+      - name: "Thermal Sensor Min Index"
+        accuracy_decimals: 0
+
+      - name: "Thermal Sensor Max Index"
+        accuracy_decimals: 0
+

@@ -1,0 +1,38 @@
+# LilyGo TTGO t-wristband Lora 433
+
+# chips and pin connections
+# LoRa SX1276
+# RST - PB10
+# MOSI - PB15
+# MISO - PB14
+# SCLK - PB13
+# NSS - PB12
+# DIO0 - PB11
+# DIO1 - PC13
+# DIO2 - PB09
+# DIO3 - PB04
+# DIO4 - PB03
+# DIO5 - PA15
+
+# GNSS CXD5603GF
+# RST - PB02
+# RX - PC11
+# TX - PC10
+# 1PPS_INTPUT - PB05
+# LEVEL_SHIFTER_EN - PC06
+# Power_Switch_GPS -- PA03
+
+# UART
+# UART_TX - PA09
+# UART_RX - PA10
+
+# SSD1306 (i2c)
+# I2C_SDA - PB7
+# I2C_SCL - PB6
+# OLED_RST - PA7
+# i2c addr = 0x3C
+
+# TTP223 Touch
+# Touchpad - PA00
+# VDD_PIN - PA02
+

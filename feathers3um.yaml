@@ -1,0 +1,49 @@
+esphome:
+  name: feathers3um
+  libraries:
+    - arduino-libraries/WiFi@1.2.7
+
+substitutions:
+  devicename: feathers3um
+  fancy_devicename: Feather S3 um test
+
+esp32:
+  board: um_feathers3
+  variant: esp32s3
+  framework:
+    type: esp-idf
+    version: recommended
+    platform_version: 5.1.0
+
+i2c:
+  sda: GPIO8
+  scl: GPIO9
+
+# RGB_LED_DATA GPIO40
+# VBUS GPIO34
+# VBAT GPIO02
+# BLUE_LED GPIO13
+# AMB_LIGHT_SENSOR GPIO04
+# LDO2_PWR_EN GPIO39
+
+
+# stuff I should include in a common file, but I haven't figured out how to make secrets work when referenced from an include in a subdir
+wifi:
+  fast_connect: True
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: !secret wifi_domain
+
+mqtt:
+  broker: '192.168.178.127'
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+
+# Enable logging
+logger:
+
+# Enable Home Assistant API
+api:
+
+ota:
+  password: !secret ota_password
