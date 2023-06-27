@@ -1,0 +1,216 @@
+# a base m5stack station with a battery, external sht31 and their plant moisture/pump module
+# I have the display backlit and somewhat working, but haven't sorted out direction or proper scaling
+
+# borrowed heavily from https://github.com/rasclatt-dot-com/ESP32-Plant-Waterer-for-ESPHome/blob/main/ESPHome-Plant-Waterer.YAML
+
+substitutions:
+  name: "m5station"
+  friendly_name: "Drying Room M5Stack Station-bat"
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: false
+  project:
+    name: lamont.m5stack_station_bat
+    version: "1.0"
+  min_version: 2023.5.0
+
+esp32:
+  board: m5stack-station
+  framework:
+    type: arduino
+
+<<: !include .home.yaml
+
+external_components:
+  - source: github://pionizer/pionizer-axp192
+    components: [axp192]
+
+i2c:
+  - id: bus_int
+    scan: true
+    sda: GPIO21
+    scl: GPIO22
+  - id: bus_ext
+    scan: true
+    sda: GPIO32
+    scl: GPIO33
+
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO23
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO37
+      inverted: true
+    name: Button_A
+    id: station_button_a
+  - platform: gpio
+    pin:
+      number: GPIO38
+      inverted: true
+    name: Button_B
+    id: station_button_b
+  - platform: gpio
+    pin:
+      number: GPIO39
+      inverted: true
+    name: Button_C
+    id: station_button_c
+
+display:
+  - platform: st7789v
+    model: Custom
+    height: 135
+    width: 240
+    offset_height: 0
+    offset_width: 0
+    #backlight_pin: AXP_LDO3
+    cs_pin: GPIO5
+    dc_pin: GPIO19
+    reset_pin: GPIO15
+    lambda: |-
+      it.line(0, 0, 50, 50);
+      it.print(0, 0, id(roboto), "Hello World!");
+
+font:
+  - file: "gfonts://Roboto"
+    id: roboto
+    size: 20
+
+light:
+  - platform: fastled_clockless
+    chipset: SK6812
+    pin: GPIO4
+    num_leds: 7
+    rgb_order: GRB
+    name: "m5station 7 Lights"
+
+sensor:
+  - platform: adc
+    pin: GPIO36
+    id: plant_moisture_percent
+    name: "m5station plant moisture"
+    attenuation: auto
+    accuracy_decimals: 0
+    unit_of_measurement: "%"
+    update_interval: 15s
+    icon: mdi:flower
+    filters:
+      - calibrate_linear:
+          - 1.795 -> 100.0
+          - 1.43 -> 0.0
+      - sliding_window_moving_average:
+          window_size: 15
+          send_every: 15
+      - median:
+          window_size: 15
+          send_every: 7
+          send_first_at: 3
+  - platform: axp192
+    model: m5stickc # turns on LDO3
+    i2c_id: bus_int
+    address: 0x34
+    brightness: 100%
+    update_interval: 15s
+    battery_level:
+      id: "m5_station_battery_level"
+      name: "Drying m5station Bat"
+  - platform: mpu6886
+    address: 0x68
+    i2c_id: bus_int
+    update_interval: 60s
+    accel_x:
+      name: "MPU6886 Accel X"
+    accel_y:
+      name: "MPU6886 Accel Y"
+    accel_z:
+      name: "MPU6886 Accel z"
+    gyro_x:
+      name: "MPU6886 Gyro X"
+    gyro_y:
+      name: "MPU6886 Gyro Y"
+    gyro_z:
+      name: "MPU6886 Gyro z"
+    temperature:
+      name: "MPU6886 Temperature"
+  - platform: ina3221
+    address: 0x40
+    i2c_id: bus_int
+    channel_1:
+      shunt_resistance: 0.1 ohm
+      current:
+        name: "AXP_GPIO0 Current"
+      power:
+        name: "AXP_GPIO0 Power"
+      bus_voltage:
+        name: "AXP_GPIO0 Bus Voltage"
+      shunt_voltage:
+        name: "AXP_GPIO0 Shunt Voltage"
+    channel_2:
+      shunt_resistance: 0.1 ohm
+      current:
+        name: "AXP_GPIO1 Current"
+      power:
+        name: "AXP_GPIO1 Power"
+      bus_voltage:
+        name: "AXP_GPIO1 Bus Voltage"
+      shunt_voltage:
+        name: "AXP_GPIO1 Shunt Voltage"
+    update_interval: 60s
+  - platform: ina3221
+    address: 0x41
+    i2c_id: bus_int
+    channel_1:
+      shunt_resistance: 0.1 ohm
+      current:
+        name: "AXP_GPIO2 Current"
+      power:
+        name: "AXP_GPIO2 Power"
+      bus_voltage:
+        name: "AXP_GPIO2 Bus Voltage"
+      shunt_voltage:
+        name: "AXP_GPIO2 Shunt Voltage"
+    channel_2:
+      shunt_resistance: 0.1 ohm
+      current:
+        name: "AXP_GPIO3 Current"
+      power:
+        name: "AXP_GPIO3 Power"
+      bus_voltage:
+        name: "AXP_GPIO3 Bus Voltage"
+      shunt_voltage:
+        name: "AXP_GPIO3 Shunt Voltage"
+    channel_3:
+      shunt_resistance: 0.1 ohm
+      current:
+        name: "AXP_GPIO4 Current"
+      power:
+        name: "AXP_GPIO4 Power"
+      bus_voltage:
+        name: "AXP_GPIO4 Bus Voltage"
+      shunt_voltage:
+        name: "AXP_GPIO4 Shunt Voltage"
+    update_interval: 60s
+  - platform: sht3xd
+    i2c_id: bus_ext
+    temperature:
+      name: "m5station Drying Temperature"
+    humidity:
+      name: "m5station Drying Humidity"
+    update_interval: 15s
+
+switch:
+  platform: gpio
+  pin: GPIO26
+  id: plant_pump
+  name: "m5station plant pump"
+  icon: mdi:water
+  on_turn_on:
+    - logger.log: "Pump Turned On!"
+    - delay: 30s
+    - switch.turn_off: plant_pump
+    - logger.log: "Pump Turned Off!"
