@@ -60,6 +60,16 @@ binary_sensor:
       inverted: true
     name: Button_C
     id: station_button_c
+  - platform: template
+    name: Soil Moisture
+    device_class: moisture
+    #Change this value to determine desire wetness of soil
+    lambda: |-
+      if (id(plant_moisture_percent).state > 35) {
+        return true; 
+      } else {
+        return false; 
+      }
 
 display:
   - platform: st7789v
@@ -88,6 +98,50 @@ light:
     num_leds: 7
     rgb_order: GRB
     name: "m5station 7 Lights"
+    internal: true
+    id: panel_lights
+  - platform: partition
+    name: "PA1"
+    segments:
+      - id: panel_lights
+        from: 0
+        to: 0
+  - platform: partition
+    name: "PB1"
+    segments:
+      - id: panel_lights
+        from: 1
+        to: 1
+  - platform: partition
+    name: "PC1"
+    segments:
+      - id: panel_lights
+        from: 2
+        to: 2
+  - platform: partition
+    name: "Center"
+    segments:
+      - id: panel_lights
+        from: 3
+        to: 3
+  - platform: partition
+    name: "PC2"
+    segments:
+      - id: panel_lights
+        from: 4
+        to: 4
+  - platform: partition
+    name: "PB2"
+    segments:
+      - id: panel_lights
+        from: 5
+        to: 5
+  - platform: partition
+    name: "PA2"
+    segments:
+      - id: panel_lights
+        from: 6
+        to: 6
 
 sensor:
   - platform: adc
@@ -124,42 +178,42 @@ sensor:
     i2c_id: bus_int
     update_interval: 60s
     accel_x:
-      name: "MPU6886 Accel X"
+      name: "${name} Accel X"
     accel_y:
-      name: "MPU6886 Accel Y"
+      name: "${name} Accel Y"
     accel_z:
-      name: "MPU6886 Accel z"
+      name: "${name} Accel z"
     gyro_x:
-      name: "MPU6886 Gyro X"
+      name: "${name} Gyro X"
     gyro_y:
-      name: "MPU6886 Gyro Y"
+      name: "${name} Gyro Y"
     gyro_z:
-      name: "MPU6886 Gyro z"
+      name: "${name} Gyro z"
     temperature:
-      name: "MPU6886 Temperature"
+      name: "${name} internal Temperature"
   - platform: ina3221
     address: 0x40
     i2c_id: bus_int
     channel_1:
       shunt_resistance: 0.1 ohm
       current:
-        name: "AXP_GPIO0 Current"
+        name: "Port A Current"
       power:
-        name: "AXP_GPIO0 Power"
+        name: "Port A Power"
       bus_voltage:
-        name: "AXP_GPIO0 Bus Voltage"
+        name: "Port A Bus Voltage"
       shunt_voltage:
-        name: "AXP_GPIO0 Shunt Voltage"
+        name: "Port A Shunt Voltage"
     channel_2:
       shunt_resistance: 0.1 ohm
       current:
-        name: "AXP_GPIO1 Current"
+        name: "Port B1 Current"
       power:
-        name: "AXP_GPIO1 Power"
+        name: "Port B1 Power"
       bus_voltage:
-        name: "AXP_GPIO1 Bus Voltage"
+        name: "Port B1 Bus Voltage"
       shunt_voltage:
-        name: "AXP_GPIO1 Shunt Voltage"
+        name: "Port B1 Shunt Voltage"
     update_interval: 60s
   - platform: ina3221
     address: 0x41
@@ -167,33 +221,33 @@ sensor:
     channel_1:
       shunt_resistance: 0.1 ohm
       current:
-        name: "AXP_GPIO2 Current"
+        name: "Port B2 Current"
       power:
-        name: "AXP_GPIO2 Power"
+        name: "Port B2 Power"
       bus_voltage:
-        name: "AXP_GPIO2 Bus Voltage"
+        name: "Port B2 Bus Voltage"
       shunt_voltage:
-        name: "AXP_GPIO2 Shunt Voltage"
+        name: "Port B2 Shunt Voltage"
     channel_2:
       shunt_resistance: 0.1 ohm
       current:
-        name: "AXP_GPIO3 Current"
+        name: "Port C1 Current"
       power:
-        name: "AXP_GPIO3 Power"
+        name: "Port C1 Power"
       bus_voltage:
-        name: "AXP_GPIO3 Bus Voltage"
+        name: "Port C1 Bus Voltage"
       shunt_voltage:
-        name: "AXP_GPIO3 Shunt Voltage"
+        name: "Port C1 Shunt Voltage"
     channel_3:
       shunt_resistance: 0.1 ohm
       current:
-        name: "AXP_GPIO4 Current"
+        name: "Port C2 Current"
       power:
-        name: "AXP_GPIO4 Power"
+        name: "Port C2 Power"
       bus_voltage:
-        name: "AXP_GPIO4 Bus Voltage"
+        name: "Port C2 Bus Voltage"
       shunt_voltage:
-        name: "AXP_GPIO4 Shunt Voltage"
+        name: "Port C2 Shunt Voltage"
     update_interval: 60s
   - platform: sht3xd
     i2c_id: bus_ext
