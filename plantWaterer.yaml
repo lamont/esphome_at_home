@@ -1,0 +1,170 @@
+substitutions:
+  devicename: plantwaterer
+  friendly_name: IndoorGrow Plant Waterer
+  device_description: A moisture sensor and water pump for indoor plants, with a display
+
+esphome:
+  name: $devicename
+  comment: ${device_description}
+
+esp32:
+  board: m5stick-c
+
+<<: !include .home.yaml
+
+# repeat logger with more select filter to avoid the st7735.display took a long time for an operation (0.07s)
+logger:
+  logs:
+    component: ERROR
+
+external_components:
+  - source: github://martydingo/esphome-axp192
+    components: [axp192]
+
+status_led:
+  pin:
+    number: GPIO10
+    inverted: true
+
+spi:
+  clk_pin: GPIO13
+  mosi_pin: GPIO15
+
+i2c:
+  - id: bus_a
+    sda: GPIO21
+    scl: GPIO22
+    scan: true
+
+binary_sensor:
+  - platform: gpio
+    pin:
+      number: GPIO37
+      inverted: true
+    id: button_a
+    on_press:
+      then:
+        - switch.toggle: led1
+  - platform: gpio
+    pin:
+      number: GPIO39
+      inverted: true
+    id: button_b
+    on_press:
+      then:
+        - switch.toggle: led1
+  - platform: status
+    name: "${friendly_name} Status"
+  - platform: template
+    name: Soil Moisture
+    device_class: moisture
+    id: moist
+    #Change this value to determine desire wetness of soil
+    lambda: |-
+      if (id(plant_moisture_percent).state > 35) {
+        return true; 
+      } else {
+        return false; 
+      }
+
+sensor:
+  - platform: uptime
+    name: "${friendly_name} Uptime"
+
+    # AXP192 power management - must be present to initialize TFT power on
+  - platform: axp192
+    model: M5STICKC
+    address: 0x34
+    i2c_id: bus_a
+    update_interval: 30s
+    battery_level:
+      name: "${friendly_name} Battery Level"
+      id: "m5stick_batterylevel"
+
+  - platform: wifi_signal
+    name: "${friendly_name} WiFi Signal"
+    update_interval: 60s
+  - platform: adc
+    pin: GPIO33
+    id: plant_moisture_percent
+    name: "${friendly_name} plant moisture"
+    attenuation: auto
+    accuracy_decimals: 0
+    unit_of_measurement: "%"
+    update_interval: 15s
+    icon: mdi:flower
+#    filters:
+#      - calibrate_linear:
+#          - 1.72 -> 100.0
+#          - 1.78 -> 0.0
+#      - sliding_window_moving_average:
+#          window_size: 15
+#          send_every: 15
+#      - median:
+#          window_size: 15
+#          send_every: 7
+#          send_first_at: 3
+
+text_sensor:
+  - platform: version
+    name: "${friendly_name} ESPHome version"
+
+switch:
+  - platform: gpio
+    pin:
+      number: GPIO10
+      inverted: true
+    id: led1
+  - platform: gpio
+    pin: GPIO32
+    id: plant_pump
+    name: "${friendly_name} plant pump"
+    icon: mdi:water
+    on_turn_on:
+      - logger.log: "Pump Turned On!"
+      - delay: 20s
+      - switch.turn_off: plant_pump
+      - logger.log: "Pump Turned Off!"
+
+
+font:
+  - file: "gfonts://Open Sans"
+    id: font1
+    size: 66
+
+color:
+  - id: color_wet
+    red: 100%
+    green: 0%
+    blue: 0%
+  - id: color_dry
+    red: 0%
+    green: 100%
+    blue: 0%
+
+# built-in 80x160 TFT
+display:
+  - platform: st7735
+    model: "INITR_MINI160X80"
+    device_height: 160
+    device_width: 82
+    col_start: 0
+    row_start: 0
+    eight_bit_color: false
+    cs_pin: GPIO5
+    dc_pin: GPIO23
+    reset_pin: GPIO18
+    invert_colors: true
+    use_bgr: true
+    lambda: |-
+      if (id(moist).state) {
+        it.fill(COLOR_OFF);
+        it.print(42, -24, id(font1), id(color_wet), TextAlign::TOP_CENTER, "W");
+        it.print(42, 32, id(font1), id(color_wet), TextAlign::TOP_CENTER, "E");
+        it.print(42, 85, id(font1), id(color_wet), TextAlign::TOP_CENTER, "T");
+      } else {
+        it.fill(COLOR_OFF);
+        it.print(42, -24, id(font1), id(color_dry), TextAlign::TOP_CENTER, "D");
+        it.print(42, 32, id(font1), id(color_dry), TextAlign::TOP_CENTER, "R");
+        it.print(42, 85, id(font1), id(color_dry), TextAlign::TOP_CENTER, "Y");
+      }
