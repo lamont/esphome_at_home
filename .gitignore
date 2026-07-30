@@ -16,6 +16,7 @@
 # Local ESPHome external_components (custom light platform for sadbat)
 !/components
 !/components/**
+components/**/__pycache__
 
 # Ignore folders.
 .storage
