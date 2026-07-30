@@ -81,15 +81,21 @@ Given `brightness_pct` (0–100) and `color (r,g,b)`:
 
 ## Network
 
-Follows the existing fleet pattern (see `.home.yaml`, other nodes):
+Follows the existing fleet pattern (see `.home.yaml`, other nodes), extended with
+a second known network since this fixture is built/tested at home but deployed
+at work:
 
-- `wifi:` STA using `!secret wifi_ssid` / `!secret wifi_password`, plus an `ap:`
-  fallback block (SSID `sadbat-fallback`, password from a new
-  `!secret sadbat_ap_password` — must be added to `secrets.yaml`, min 8 chars per
-  ESPHome's AP password requirement) and `captive_portal:`. If the device can't
-  join home wifi (e.g. first boot in the field, away from the home network), it
-  opens its own AP with a captive portal so the wifi credentials can be
-  reconfigured on-site.
+- `wifi.networks:` list with **two** known SSIDs — home (`!secret wifi_ssid` /
+  `!secret wifi_password`, same as the rest of the fleet) and work (new
+  `!secret work_wifi_ssid` / `!secret work_wifi_password`, to be added to
+  `secrets.yaml`). ESPHome tries all listed networks and joins whichever is in
+  range (strongest match), so the same firmware image works at home for testing
+  and at work for deployment with no field reconfiguration.
+- Still backed by an `ap:` fallback block (SSID `sadbat-fallback`, password from
+  a new `!secret sadbat_ap_password` — min 8 chars per ESPHome's AP password
+  requirement) and `captive_portal:`, as the true last resort if *neither* known
+  network is in range (e.g. a third location, or the work SSID/password changes
+  before the yaml is updated).
 - `logger:` enabled.
 - `ota:` password-protected (`!secret ota_password`, matching the rest of the
   fleet) — this repo's convention is first flash over USB, then OTA for all
