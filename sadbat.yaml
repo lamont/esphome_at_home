@@ -1,8 +1,8 @@
 # sadbat — Qwiic LED Stick (APA102C) bargraph/dimmer controller
 #
-# SparkFun Thing Plus ESP32 WROOM (USB-C) + SparkFun Qwiic LED Stick - APA102C, wired via the
-# board's Qwiic connector. See sadbat-design.md for the full design rationale (fill algorithm,
-# wiring gotchas, protocol details, sourcing).
+# SparkFun Thing Plus ESP32 WROOM + SparkFun Qwiic LED Stick - APA102C, wired via the board's
+# Qwiic connector. See sadbat-design.md for the full design rationale (fill algorithm, wiring
+# gotchas, protocol details, sourcing).
 #
 # First flash MUST be over USB serial — the device is not running ESPHome yet, so there is no
 # OTA to take over. After that, OTA works normally.
@@ -16,27 +16,11 @@ substitutions:
 esphome:
   name: ${devicename}
   comment: "Qwiic LED Stick bargraph/dimmer, no Home Assistant"
-  on_boot:
-    # Must run before the i2c bus's own setup (priority 1000/"BUS") or the LED stick won't have
-    # power yet when the bus does its startup scan. 1200 matches ESPHome's own "POWER" priority
-    # tier, documented for exactly this "power supply before buses" case.
-    priority: 1200
-    then:
-      - output.turn_on: qwiic_power_enable
 
 esp32:
   board: esp32thing_plus
   framework:
     type: arduino
-
-# ===== Qwiic connector power =====
-# The Qwiic connector's LDO is OFF by default and must be switched on via GPIO0 before anything
-# on the bus (including the LED stick) will respond. GPIO0 doubles as the BOOT button, so
-# pressing it in the field will momentarily cut power to the LEDs. See sadbat-design.md.
-output:
-  - platform: gpio
-    pin: GPIO0
-    id: qwiic_power_enable
 
 i2c:
   sda: GPIO23
@@ -55,6 +39,11 @@ light:
     i2c_id: qwiic_bus
     address: 0x23
     restore_mode: ALWAYS_OFF
+    # A bargraph display should snap, not fade. ESPHome's default 1s transition would otherwise
+    # call write_state() many times per single change (worse yet, repeatedly restarted if the
+    # web UI slider is dragged) -- confirmed on hardware that this floods the LED stick's I2C
+    # slave with more updates than pacing alone could keep up with.
+    default_transition_length: 0s
 
 logger:
 
