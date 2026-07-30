@@ -17,6 +17,10 @@ esphome:
   name: ${devicename}
   comment: "Qwiic LED Stick bargraph/dimmer, no Home Assistant"
   on_boot:
+    # Must run before the i2c bus's own setup (priority 1000/"BUS") or the LED stick won't have
+    # power yet when the bus does its startup scan. 1200 matches ESPHome's own "POWER" priority
+    # tier, documented for exactly this "power supply before buses" case.
+    priority: 1200
     then:
       - output.turn_on: qwiic_power_enable
 
@@ -35,7 +39,7 @@ output:
     id: qwiic_power_enable
 
 i2c:
-  sda: GPIO21
+  sda: GPIO23
   scl: GPIO22
   id: qwiic_bus
 
