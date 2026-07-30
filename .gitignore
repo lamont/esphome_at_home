@@ -13,6 +13,10 @@
 !Pipfile
 !Pipfile.lock
 
+# Local ESPHome external_components (custom light platform for sadbat)
+!/components
+!/components/**
+
 # Ignore folders.
 .storage
 .cloud
