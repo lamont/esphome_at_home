@@ -1,0 +1,25 @@
+# sadbat — Qwiic LED Stick (APA102C) bargraph/dimmer controller
+#
+# SparkFun Thing Plus ESP32 WROOM (USB-C) + SparkFun Qwiic LED Stick - APA102C, wired via the
+# board's Qwiic connector. See sadbat-design.md for the full design rationale (fill algorithm,
+# wiring gotchas, protocol details, sourcing).
+#
+# First flash MUST be over USB serial — the device is not running ESPHome yet, so there is no
+# OTA to take over. After that, OTA works normally.
+# Build:  cd ~/src/esphomeyaml && . aliases && compile sadbat.yaml
+# Flash:  esp_flash sadbat
+
+substitutions:
+  devicename: sadbat
+  friendly_name: Sadbat LED Bar
+
+esphome:
+  name: ${devicename}
+  comment: "Qwiic LED Stick bargraph/dimmer, no Home Assistant"
+
+esp32:
+  board: esp32thing_plus
+  framework:
+    type: arduino
+
+logger:
