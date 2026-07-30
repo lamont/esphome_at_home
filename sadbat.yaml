@@ -16,10 +16,27 @@ substitutions:
 esphome:
   name: ${devicename}
   comment: "Qwiic LED Stick bargraph/dimmer, no Home Assistant"
+  on_boot:
+    then:
+      - output.turn_on: qwiic_power_enable
 
 esp32:
   board: esp32thing_plus
   framework:
     type: arduino
+
+# ===== Qwiic connector power =====
+# The Qwiic connector's LDO is OFF by default and must be switched on via GPIO0 before anything
+# on the bus (including the LED stick) will respond. GPIO0 doubles as the BOOT button, so
+# pressing it in the field will momentarily cut power to the LEDs. See sadbat-design.md.
+output:
+  - platform: gpio
+    pin: GPIO0
+    id: qwiic_power_enable
+
+i2c:
+  sda: GPIO21
+  scl: GPIO22
+  id: qwiic_bus
 
 logger:
