@@ -1,0 +1,328 @@
+# Patio Speakers — Sonocotta "Amped Esparagus" (rev e/f/g, non-J)
+#
+# ESP32-WROVER-N8R8 + PCM5100A I2S DAC + TPA3110/3118/3128 class-D amp.
+# 8x WS2812 front strip, IR receiver, rotary encoder, (unpopulated?) SPI OLED.
+#
+# Replaces the stock squeezelite-esp32 image. NB the unit shipped running the
+# *Muse* target build (version "Muse-1736"), which is compiled for the Raspiaudio
+# Muse board (ES8388 codec on I2S bck=5/ws=25/do=26 + I2C 18/23). That is the wrong
+# pinout for this board — the PCM5100 here is bck=26/ws=25/do=22 with no I2C codec.
+#
+# Audio path is Sendspin (Open Home Foundation synced multiroom), which Music
+# Assistant 2.9.9 already has enabled as a player provider.
+#
+# Build:  cd ~/src/esphomeyaml && . aliases && run patio-speakers.yaml
+# First flash MUST be over USB serial — the device is not running ESPHome yet,
+# so there is no OTA to take over. After that, OTA works normally.
+
+substitutions:
+  name: patio-speakers
+  device_friendly_name: Patio Speakers
+  # Sonocotta's packages hardcode entity names as "${friendly_name} Uptime", and HA
+  # separately prefixes the device name — giving "Patio Speakers Patio Speakers
+  # Uptime". Setting this empty does NOT work: the leading space survives into the
+  # binary (App.register_sensor(..., " Uptime", ...)), giving a double-spaced display
+  # name and a "_uptime" object_id. Instead the monitoring packages are dropped and
+  # redefined locally below, and every other prefixed entity is renamed via !extend.
+  friendly_name: ${device_friendly_name}
+  task_stack_in_psram: "false"
+
+  # We drive the LED strip ourselves as a status indicator (see below), so tell
+  # the Sonocotta sendspin package to keep its hands off it during announcements.
+  media_player_led_control: "false"
+
+  # ===== Board-Specific Pinouts (Amped Esparagus, non-J) =====
+  # I2S Audio (PCM5100 DAC)
+  i2s_lrclk_pin: GPIO25
+  i2s_bclk_pin: GPIO26
+  i2s_dout_pin: GPIO22
+
+  # USB-PD enable. Driven LOW, matching "13=gnd" in this board's squeezelite NVS.
+  pd_enable_pin: GPIO13
+
+  # RGB LED
+  rgb_led_pin: GPIO12
+  num_leds: "8"
+
+  # IR Receiver
+  ir_rx_pin: GPIO39
+
+  # Rotary Encoder
+  rotary_pin_a: GPIO33
+  rotary_pin_b: GPIO27
+  rotary_btn_pin: GPIO34
+
+  # SPI pins (display / ethernet — unused unless the OLED package is enabled)
+  spi_clk_pin: GPIO18
+  spi_mosi_pin: GPIO23
+  spi_miso_pin: GPIO19
+
+  # OLED (SPI)
+  display_cs_pin: GPIO15
+  display_dc_pin: GPIO04
+  display_reset_pin: GPIO32
+
+  # ESP32 optimal settings for Sendspin
+  media_source_buffer_size: "100000"
+
+esphome:
+  name: ${name}
+  friendly_name: ${device_friendly_name}
+  min_version: 2026.5.0
+  platformio_options:
+    board_build.flash_mode: dio
+
+esp32:
+  id: esp32_id
+  variant: esp32
+  flash_size: 8MB
+  cpu_frequency: 240MHz
+  framework:
+    type: esp-idf
+    version: recommended
+    advanced:
+      minimum_chip_revision: "3.1"
+    sdkconfig_options:
+      # Move instructions and read-only data from flash into PSRAM on boot, so
+      # code can execute while a flash op is in progress without living in IRAM.
+      CONFIG_SPIRAM_RODATA: "y"
+      CONFIG_SPIRAM_FETCH_INSTRUCTIONS: "y"
+      CONFIG_BT_ALLOCATION_FROM_SPIRAM_FIRST: "y"
+      CONFIG_BT_BLE_DYNAMIC_ENV_MEMORY: "y"
+      CONFIG_MBEDTLS_EXTERNAL_MEM_ALLOC: "y"
+      CONFIG_MBEDTLS_SSL_PROTO_TLS1_3: "y"
+
+psram:
+  speed: 80MHz
+
+logger:
+  level: INFO
+
+api:
+  id: api_server
+
+ota:
+  platform: esphome
+  password: !secret ota_password
+
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  domain: !secret wifi_domain
+  # Synced multiroom audio and power save do not mix — the stock squeezelite
+  # image was showing ~100ms LAN RTT from modem-sleep.
+  power_save_mode: none
+
+network:
+  enable_ipv6: true
+
+# ===== Sonocotta packages =====
+packages:
+  esparagus_remote:
+    url: https://github.com/sonocotta/esparagus-media-center
+    ref: main
+    files:
+      - firmware/esphome/packages/audio.yaml
+      - firmware/esphome/packages/sendspin.yaml
+      - firmware/esphome/packages/sendspin-addon-esp32.yaml
+      # Enable only if this unit actually has the OLED populated — it shares the
+      # SPI bus and will log errors on boot if the panel is absent.
+      # - firmware/esphome/packages/sendspin-addon-oled.yaml
+      - firmware/esphome/packages/light-x.yaml
+      - firmware/esphome/packages/ir-receiver.yaml
+      - firmware/esphome/packages/rotary-encoder.yaml
+      - firmware/esphome/packages/pd-enable.yaml
+      # monitoring.yaml / monitoring-wifi.yaml are deliberately NOT used — every
+      # entity in them is named "${friendly_name} X" with no id, so there is no way
+      # to rename them. Redefined locally under "Diagnostics" below.
+
+# ===== Entity naming =====
+# The Sonocotta packages prefix every entity with ${friendly_name}, and HA also
+# prefixes the device name — so left alone you get "Patio Speakers Patio Speakers
+# Player". Rename the two entities that actually get used.
+media_player:
+  - id: !extend external_media_player
+    name: None            # -> media_player.patio_speakers
+  - id: !extend sendspin_group_media_player
+    name: Sendspin        # -> media_player.patio_speakers_sendspin
+
+light:
+  - id: !extend rgb_front_led
+    name: Front LEDs      # -> light.patio_speakers_front_leds
+
+# Remaining package entities that carry an id, renamed to drop the doubled prefix.
+number:
+  - id: !extend announce_volume
+    name: Announce Volume
+
+# ===== Diagnostics (replaces monitoring.yaml / monitoring-wifi.yaml) =====
+debug:
+  update_interval: 10s
+
+sensor:
+  - id: !extend rotary_dial
+    name: Rotary Encoder
+  - platform: uptime
+    name: Uptime
+    update_interval: 60s
+  - platform: internal_temperature
+    # NB the ESP32-D0WD internal sensor is wildly inaccurate (reads ~129 °C here).
+    # Kept for trend-watching only; do not treat as a real temperature.
+    name: CPU Temperature
+    update_interval: 60s
+  - platform: wifi_signal
+    name: WiFi Signal
+    update_interval: 60s
+  - platform: debug
+    loop_time:
+      name: Loop Time
+    psram:
+      name: Free PSRAM
+    cpu_frequency:
+      name: CPU Frequency
+
+text_sensor:
+  - platform: debug
+    reset_reason:
+      name: Reset Reason
+  - platform: wifi_info
+    ip_address:
+      name: IP
+    mac_address:
+      name: MAC
+
+binary_sensor:
+  - id: !extend rotary_btn
+    name: Rotary Button
+  - platform: status
+    name: Status
+
+button:
+  - platform: restart
+    id: restart_btn
+    name: Reboot
+
+# ===== Front LED status indicator =====
+# 0 = WiFi down (red), 1 = WiFi up but no HA (amber),
+# 2 = playing (green), 3 = connected & idle (blue).
+#
+# Brightness calibration: the first build used 10% for idle, which is invisible
+# behind the semi-transparent front panel. 100% white is comfortably visible, so
+# idle sits at 35% and playing at 85%. Idle is the one that burns all night on a
+# patio — turn the whole thing off with switch.patio_speakers_status_led_indicator,
+# which also hands the strip back for manual/HA control.
+globals:
+  - id: led_state_current
+    type: int
+    restore_value: false
+    initial_value: "-1"
+
+switch:
+  - platform: template
+    id: led_auto_indicator
+    name: Status LED Indicator
+    icon: mdi:led-on
+    optimistic: true
+    restore_mode: RESTORE_DEFAULT_ON
+    turn_on_action:
+      - lambda: "id(led_state_current) = -1;"
+      - script.execute: refresh_status_led
+
+script:
+  # Applies a status colour, but only when it differs from what is already
+  # showing — otherwise the strip would republish its state every tick.
+  - id: set_status_led
+    mode: restart
+    parameters:
+      state: int
+    then:
+      - if:
+          condition:
+            lambda: "return state != id(led_state_current);"
+          then:
+            - lambda: "id(led_state_current) = state;"
+            - if:
+                condition:
+                  lambda: "return state == 0;"
+                then:
+                  - light.turn_on:
+                      id: rgb_front_led
+                      red: 100%
+                      green: 0%
+                      blue: 0%
+                      brightness: 65%
+            - if:
+                condition:
+                  lambda: "return state == 1;"
+                then:
+                  - light.turn_on:
+                      id: rgb_front_led
+                      red: 100%
+                      green: 40%
+                      blue: 0%
+                      brightness: 55%
+            - if:
+                condition:
+                  lambda: "return state == 2;"
+                then:
+                  - light.turn_on:
+                      id: rgb_front_led
+                      red: 0%
+                      green: 100%
+                      blue: 25%
+                      brightness: 85%
+            - if:
+                condition:
+                  lambda: "return state == 3;"
+                then:
+                  - light.turn_on:
+                      id: rgb_front_led
+                      red: 0%
+                      green: 35%
+                      blue: 100%
+                      brightness: 35%
+
+  - id: refresh_status_led
+    mode: restart
+    then:
+      - if:
+          condition:
+            switch.is_off: led_auto_indicator
+          then:
+            # Hand the strip back for manual/HA control.
+            - lambda: "id(led_state_current) = -1;"
+          else:
+            - if:
+                condition:
+                  not:
+                    wifi.connected:
+                then:
+                  - script.execute:
+                      id: set_status_led
+                      state: 0
+                else:
+                  - if:
+                      condition:
+                        not:
+                          api.connected:
+                      then:
+                        - script.execute:
+                            id: set_status_led
+                            state: 1
+                      else:
+                        - if:
+                            condition:
+                              lambda: "return id(external_media_player).state == media_player::MEDIA_PLAYER_STATE_PLAYING;"
+                            then:
+                              - script.execute:
+                                  id: set_status_led
+                                  state: 2
+                            else:
+                              - script.execute:
+                                  id: set_status_led
+                                  state: 3
+
+interval:
+  - interval: 2s
+    then:
+      - script.execute: refresh_status_led
