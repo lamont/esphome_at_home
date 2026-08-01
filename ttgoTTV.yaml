@@ -1,7 +1,17 @@
-# SCD41 CO2 sensor + SSD1306 OLED display
-# and a testbed for stuff like the AMG8833 8x8 IR thermal sensor
-
+#  TTGO TTV module $25
 # the only docs I know of are https://github.com/Xinyuan-LilyGO/LilyGo-TTV
+# Has an external i2c plug and a bunch of add-on sensors you can buy like the
+# APDS-9960 -  Broadcom APDS-9960 is a digital RGB, ambient light, proximity and gesture sensor device on i2c
+# avail as an external item that I didn't buy
+#  https://learn.sparkfun.com/tutorials/apds-9960-rgb-and-gesture-sensor-hookup-guide/all
+#  https://esphome.io/components/sensor/apds9960.html
+#  https://cdn.sparkfun.com/datasheets/Sensors/Proximity/apds9960.pdf
+
+
+# Enable Home Assistant API
+api:
+
+# from the android sketches, it seems to use these libraries, which I'll resort to including if esphome does not have native support
 # U8g2_Arduino
 # Arduino-IRremote
 # PCF8563_Library
@@ -11,7 +21,7 @@
 # Adafruit_SGP30
 # TFT_eSPI
 
-# OLED, tft_spi
+# OLED, ST7789 135*240 via tft_spi, 1.54 inch blue transparent OLED (says 1.14" in the schematic)
 # MISO IO32
 # MOSI IO23
 # SCKL IO18
@@ -19,40 +29,53 @@
 # DC IO19
 # RST IO04
 
-# TOUCH
+display:
+  - platform: ssd1306_spi
+    id: "oled_display"
+    #backlight_pin: GPIO33
+    cs_pin: GPIO05
+    dc_pin: GPIO19
+    reset_pin: GPIO04
+    model: "SSD1306 128x64"
+    # we're gonna want pages of lambdas, but for now, one lambda
+    pages:
+      - id: hello_world
+        lambda: |-
+          it.print(0, 0, id(helvetica_12), "Hello World!");
+      - id: second_page
+        lambda: |-
+          it.print(0, 0, id(helvetica_12), "cleared for 2");
+
+# TOUCH (TTP223)
 # pin IO15
 # EN IO32
 
-# i2c, with RTC and external QWIIC
+# i2c, with RTC (PCF8563) and external QWIIC
+# https://www.nxp.com/docs/en/data-sheet/PCF8563.pdf
+# i2c read A3h, write A2h
+# pins 7 and 3 NC, would have been CLKOUT and not INT, for alarms.
 # SDA IO21
 # SCL IO22
 
-# IR RECV IO13
+# IR RECV IO13 (HS0038)
 # Power IO02
-# BAT_ADC IO34
+# BAT_ADC IO34 (says 105 mA I assume mAh)
+
+# VBAT_ADC GPIO34, half voltage divider from the battery
 
 esphome:
-  name: lilygottv
+  name: ttgottv
+  libraries:
+    - Wire
+    - Rtc_Pcf8563
 
 esp32:
-  board: um_feathers3
-  variant: esp32s3
-  framework:
-    type: arduino
-    version: 2.0.4
-    platform_version: 4.3.0
-
-# Example configuration entry
-i2c:
-  sda: GPIO8
-  scl: GPIO9
-
-display:
-  - platform: ssd1306_i2c
-    model: "SSD1306_64x48"
-    address: 0x3C
-    lambda: |-
-      it.print(0, 0, id(helvetica_12), "Hello World!");
+  board: esp32dev
+  variant: esp32
+#  framework:
+#    type: arduino
+#    version: 2.0.4
+#    platform_version: 4.3.0
 
 font:
   - file: "fonts/Helvetica.ttf"
@@ -65,23 +88,72 @@ font:
     id: helvetica_12
     size: 12
 
+# both i2c buses are wired, only thing on the internal bus is the rtc
+i2c:
+  - id: external_bus
+    frequency: 10kHz
+    sda: GPIO21
+    scl: GPIO22
+    scan: true
+  - id: internal_bus
+    frequency: 10kHz
+    sda: GPIO26
+    scl: GPIO25
+    scan: true
+
+interval:
+  - interval: 5s
+    then:
+      - display.page.show_next: oled_display
+      - component.update: oled_display
+      - output.set_level:
+          id: backlight
+          level: 20%
+
 # Enable logging
 logger:
-
-# Enable Home Assistant API
-api:
 
 ota:
   password: !secret ota_password
 
+output:
+  - platform: ledc
+    pin: GPIO33
+    id: 'backlight'
+
+switch:
+  - platform: output
+    name: "TTV Screen Enable"
+    output: 'backlight'
+    restore_mode: 'RESTORE_DEFAULT_ON'
+
 sensor:
-  - platform: scd4x
-    co2:
-      name: "Office CO2"
-    temperature:
-      name: "Office Temperature"
-    humidity:
-      name: "Office Humidity"
+  # # VBAT_ADC GPIO34, half voltage divider from the battery
+  - platform: adc
+    id: vbat
+    internal: true
+    pin: GPIO34
+  - platform: template
+    name: "ttgoTTV.battery_level"
+    unit_of_measurement: '%'
+    update_interval: 15s
+    lambda: |-
+      return ((id(vbat).state * 2 / 3.3) * 100);
+
+# MISO IO32
+# MOSI IO23
+# SCKL IO18
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO23
+  miso_pin: GPIO32
+
+time:
+  - platform: homeassistant
+    id: ha_time
+    on_time_sync:
+      then:
+        - logger.log: "Time sync"
 
 wifi:
   fast_connect: True

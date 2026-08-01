@@ -61,7 +61,7 @@ binary_sensor:
     id: moist
     #Change this value to determine desire wetness of soil
     lambda: |-
-      if (id(plant_moisture_percent).state > 35) {
+      if (id(plant_moisture_percent).state > 10) {
         return true; 
       } else {
         return false; 
@@ -91,19 +91,19 @@ sensor:
     attenuation: auto
     accuracy_decimals: 0
     unit_of_measurement: "%"
-    update_interval: 15s
+    update_interval: 5s
     icon: mdi:flower
-#    filters:
-#      - calibrate_linear:
-#          - 1.72 -> 100.0
-#          - 1.78 -> 0.0
-#      - sliding_window_moving_average:
-#          window_size: 15
-#          send_every: 15
-#      - median:
-#          window_size: 15
-#          send_every: 7
-#          send_first_at: 3
+    filters:
+      - calibrate_linear:
+          - 1.63 -> 100.0
+          - 1.78 -> 0.0
+      - sliding_window_moving_average:
+          window_size: 15
+          send_every: 3
+      - median:
+          window_size: 15
+          send_every: 3
+          send_first_at: 3
 
 text_sensor:
   - platform: version

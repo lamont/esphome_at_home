@@ -15,6 +15,12 @@ esphome:
     name: lamont.m5stack_station_bat
     version: "1.0"
   min_version: 2023.5.0
+  libraries:
+    - Wire
+    - SPI
+    - FS
+    - SD
+    - m5stack/M5Station
 
 esp32:
   board: m5stack-station

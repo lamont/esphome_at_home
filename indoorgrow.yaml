@@ -47,10 +47,10 @@ sensor:
     update_interval: 5s
     filters:
       - sliding_window_moving_average:
-          window_size: 3
+          window_size: 15
           send_every: 3
   - platform: ccs811
-    baseline: 0xA4AE # pulled from the logs of the running device after 20-30 minutes
+    baseline: 0x7BAB # pulled from the logs of the running device after 20-30 minutes
     temperature: bme_temp # use the external temperature sensor to improve these results
     humidity: bme_humidity # same with humidity from the bme
     eco2:
@@ -73,7 +73,7 @@ sensor:
     # Address is not default!
     address: 0x77
     update_interval: 15s
-    iir_filter: 16X
+    iir_filter: 4x
   - platform: tmp117
     name: "Weed Undercanopy TMP117 Temperature"
     update_interval: 15s

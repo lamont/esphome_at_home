@@ -1,6 +1,9 @@
 # Olimex PoE esp32 (isolated)
 # can it ble while running a wired ip stack?
 
+external_components:
+  - source: github://bendikwa/esphome-igrill@v1.2
+
 # Enable Home Assistant API
 api:
 
@@ -10,6 +13,8 @@ esp32_ble_tracker:
     interval: 1100ms
     window: 1100ms
     active: true
+
+igrill_ble_listener:
 
 # This enables the home assistant bluetooth proxy through this device
 bluetooth_proxy:

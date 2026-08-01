@@ -1,7 +1,13 @@
 esphome:
-  name: tdisplay
-  platform: ESP32
-  board: featheresp32
+  name: co2tdisplay
+  comment: co2 monitor with display in my workroom
+
+esp32:
+  board: featheresp32-s2
+  variant: esp32s2
+  framework:
+    type: esp-idf
+    version: recommended
 
 wifi:
   ssid: !secret wifi_ssid
@@ -71,9 +77,9 @@ binary_sensor:
 # We can still control the backlight independently
 switch:
   - platform: gpio
-    pin: GPIO4
-    name: "Backlight"
-    id: backlight
+    pin: GPIO21
+    name: "Display Power"
+    id: display_power
 
 #image:
 #  - file: "images/24317-2-fireworks-hd.png"
@@ -86,21 +92,27 @@ time:
     id: esptime
 
 spi:
-  clk_pin: GPIO18
-  mosi_pin: GPIO19
+  clk_pin: GPIO36
+  mosi_pin: GPIO35
+  miso_pin: GPIO37
 
 i2c:
   scan: true
   # https://github.com/Xinyuan-LilyGO/TTGO-T-Display#pinout
-  sda: GPIO21
-  scl: GPIO22
+  sda: GPIO42
+  scl: GPIO41
 
 display:
   - platform: st7789v
-    backlight_pin: GPIO4
-    cs_pin: GPIO5
-    dc_pin: GPIO16
-    reset_pin: GPIO23
+    model: Custom
+    height: 240
+    width: 135
+    offset_height: 0
+    offset_width: 0
+    backlight_pin: GPIO45
+    cs_pin: GPIO7
+    dc_pin: GPIO39
+    reset_pin: GPIO40
     rotation: 270
     lambda: |-
       it.rectangle(0,  0, it.get_width(), it.get_height(), id(my_blue));

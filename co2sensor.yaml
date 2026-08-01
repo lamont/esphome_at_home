@@ -1,39 +1,47 @@
 # SCD41 CO2 sensor + SSD1306 OLED display
+# and a testbed for stuff like the AMG8833 8x8 IR thermal sensor
+
 
 esphome:
   name: co2sensor
-
+  includes:
+    - includes/AMG8833-ESPHOME/amg8833.h
+    - includes/AMG8833-ESPHOME/amg8833_camera.h
+    #- includes/AMG8833-ESPHOME/amg8833_person_detected.h
+  libraries:
+    - "Wire"
+    - "SparkFun GridEYE AMG88 Library"
 # needed https://github.com/espressif/arduino-esp32/pull/6881 from 27 days ago before this board is defined
 esp32:
   board: um_feathers3
   variant: esp32s3
   framework:
     type: arduino
-    version: 2.0.4
-    platform_version: 4.3.0
+    version: 2.0.2
+    platform_version: 5.0.0
 
 # Example configuration entry
 i2c:
   sda: GPIO8
   scl: GPIO9
 
-display:
-  - platform: ssd1306_i2c
-    model: "SSD1306_64x48"
-    address: 0x3C
-    lambda: |-
-      it.print(0, 0, id(helvetica_12), "Hello World!");
+#display:
+#  - platform: ssd1306_i2c
+#    model: "SSD1306_64x48"
+#    address: 0x3C
+#    lambda: |-
+#      it.print(0, 0, id(helvetica_12), "Hello World!");
 
-font:
-  - file: "fonts/Helvetica.ttf"
-    id: helvetica_48
-    size: 48
-  - file: "fonts/Helvetica.ttf"
-    id: helvetica_24
-    size: 24
-  - file: "fonts/Helvetica.ttf"
-    id: helvetica_12
-    size: 12
+#font:
+#  - file: "fonts/Helvetica.ttf"
+#    id: helvetica_48
+#    size: 48
+#  - file: "fonts/Helvetica.ttf"
+#    id: helvetica_24
+#    size: 24
+#  - file: "fonts/Helvetica.ttf"
+#    id: helvetica_12
+#    size: 12
 
 # Enable logging
 logger:
@@ -44,14 +52,14 @@ api:
 ota:
   password: !secret ota_password
 
-sensor:
-  - platform: scd4x
-    co2:
-      name: "Office CO2"
-    temperature:
-      name: "Office Temperature"
-    humidity:
-      name: "Office Humidity"
+#sensor:
+#  - platform: scd4x
+#    co2:
+#      name: "Office CO2"
+#    temperature:
+#      name: "Office Temperature"
+#    humidity:
+#      name: "Office Humidity"
 
 wifi:
   fast_connect: True
@@ -63,3 +71,56 @@ mqtt:
   broker: '192.168.178.127'
   username: !secret mqtt_username
   password: !secret mqtt_password
+
+text_sensor:
+  - platform: custom
+    lambda: |-
+      auto amg8833 = new AMG8833CameraComponent();
+      App.register_component(amg8833);
+      return {amg8833};
+    text_sensors:
+      - name: "Sensor Pixels"
+
+#binary_sensor:
+#  - platform: custom
+#    lambda: |-
+#      auto amg8833 = new AMG8833PersonDetectedComponent();
+#      App.register_component(amg8833);
+#      return {amg8833};
+#    binary_sensors:
+#      name: "Person Detected"
+#      device_class: occupancy
+
+sensor:
+  - platform: custom
+    lambda: |-
+      auto amg8833 = new AMG8833Component();
+      App.register_component(amg8833);
+      return {amg8833->sensor_temperature, amg8833->max_temperature, amg8833->min_temperature, amg8833->avg_temperature, amg8833->min_index, amg8833->max_index};
+    sensors:
+      - name: "Thermal Sensor Temperature"
+        unit_of_measurement: °C
+        device_class: temperature
+        accuracy_decimals: 2
+
+      - name: "Thermal Sensor Max"
+        unit_of_measurement: °C
+        device_class: temperature
+        accuracy_decimals: 2
+
+      - name: "Thermal Sensor Min"
+        unit_of_measurement: °C
+        device_class: temperature
+        accuracy_decimals: 2
+
+      - name: "Thermal Sensor Avg"
+        unit_of_measurement: °C
+        device_class: temperature
+        accuracy_decimals: 2
+
+      - name: "Thermal Sensor Min Index"
+        accuracy_decimals: 0
+
+      - name: "Thermal Sensor Max Index"
+        accuracy_decimals: 0
+
