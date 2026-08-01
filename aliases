@@ -1,4 +1,13 @@
-VERSION=2022.6.1
+# ESPHome toolchain, via docker.
+#
+# The legacy fleet in this repo was built with 2022.6.1. Newer nodes need newer
+# ESPHome (patio-speakers.yaml requires >= 2026.5.0 for the sendspin component),
+# so VERSION is now overridable instead of hardcoded:
+#
+#   . aliases                             # current default, below
+#   ESPHOME_VERSION=2022.6.1 . aliases    # pin for an old ESP8266 node
+#
+VERSION=${ESPHOME_VERSION:-2026.7.2}
 alias update="docker pull esphome/esphome:$VERSION"
 
 DOCKER_ARGS="-ti --rm -v ${PWD}:/config esphome/esphome:$VERSION"
@@ -10,3 +19,30 @@ dashboard() { docker run -p 6052:6052 --net=host $DOCKER_ARGS; }
 flash() { docker run --device=/dev/cu.SLAB_USBtoUART $DOCKER_ARGS upload "$1" --upload-port /dev/cu.SLAB_USBtoUART; }
 
 alias esphome='docker run --rm -v "${PWD}":/config --net=host -it esphome/esphome'
+
+# --- Serial flashing on macOS ---
+# Docker Desktop on macOS cannot pass through USB serial, so `flash()` above does
+# not work on this machine (it predates it). For a first flash onto a board that
+# is not yet running ESPHome, compile in docker and push the factory image with a
+# native esptool, run on demand via uv (no install needed):
+#
+#   compile patio-speakers.yaml
+#   esp_flash patio-speakers          # optionally: esp_flash patio-speakers /dev/cu.usbserial-XXXX
+#
+# After the first flash the node is on the network and plain `run` does OTA.
+esp_flash() {
+  local node="$1"
+  local port="${2:-$(ls /dev/cu.usbserial-* /dev/cu.SLAB_USBtoUART /dev/cu.wchusbserial* /dev/cu.usbmodem* 2>/dev/null | head -1)}"
+  # esp-idf framework builds land in build/; older platformio nodes use .pioenvs/.
+  local bin=".esphome/build/${node}/build/firmware.factory.bin"
+  [ -f "$bin" ] || bin=".esphome/build/${node}/.pioenvs/${node}/firmware-factory.bin"
+  [ -f "$bin" ] || { echo "no factory image for ${node} — run: compile ${node}.yaml"; return 1; }
+  [ -n "$port" ] || { echo "no serial port found; plug the board in, or pass one explicitly"; return 1; }
+  # 460800 corrupts on some USB-UARTs (the Amped Esparagus fails with "Invalid head
+  # of packet"); 230400 is reliable there. Override with ESP_BAUD=<rate>.
+  local baud="${ESP_BAUD:-230400}"
+  echo "flashing $bin -> $port @ $baud"
+  # esptool v5 uses hyphenated subcommands/flags.
+  uvx --from esptool esptool --chip esp32 --port "$port" --baud "$baud" \
+    write-flash -z --flash-mode dio --flash-freq 40m --flash-size detect 0x0 "$bin"
+}
