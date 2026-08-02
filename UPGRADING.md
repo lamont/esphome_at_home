@@ -25,17 +25,17 @@ and compiling clean. Full inventory, reachability, and compile status below.
 | `snek` | Wio Link — internal/external DHT temp+humidity | ESP8266 wio_link | **Yes** (192.168.178.213) | Yes | **Yes** ✅ |
 | `patio-speakers` | Sonocotta "Amped Esparagus" — Sendspin multiroom speaker | ESP32-WROVER | **Yes** (192.168.178.79) | Yes | **Yes** ✅ |
 | `indoorgrow` | Grow tent tensiometer + CCS811/BME280/SCD40/TMP117/BH1750 | ESP32 esp32thing_plus | **Yes** (192.168.178.228) | Yes | **Yes** ✅ |
-| `m5station` | M5Stack Station — battery, SHT31, plant moisture/pump | ESP32 m5stack-station | Yes (192.168.178.221) | **No — blocked** | No (left on old firmware) |
-| `plantwaterer` (`plantWaterer.yaml`) | M5StickC plant moisture sensor + pump + display | ESP32 m5stick-c | Yes (192.168.178.226) | **No — blocked** | No (left on old firmware) |
+| `m5station` | M5Stack Station — battery, SHT31, plant moisture/pump | ESP32 m5stack-station | Yes (192.168.178.221) | **No — blocked** (axp192 fixed 2026-08-02, unrelated M5Station lib issue remains) | No (left on old firmware) |
+| `plantwaterer` (`plantWaterer.yaml`) | M5StickC plant moisture sensor + pump + display | ESP32 m5stick-c | Yes (192.168.178.226) | **Yes** (axp192 migrated 2026-08-02) | Not yet — pending sign-off |
 | `sadbat` | Qwiic LED Stick bargraph/dimmer (no HA) | ESP32 thing_plus | No (never flashed OTA-capable yet — first flash is USB-only) | Yes | N/A (no OTA path) |
 | `bedroomecho` | M5Stack Atom Echo — Home Assistant voice satellite | ESP32 m5stack-atom | No | Yes | N/A |
 | `ble0` | Olimex PoE ESP32 — BLE proxy + iGrill listener | ESP32 esp32-poe (ethernet) | No | Yes | N/A |
-| `co2sensor` | SCD41 CO2 + AMG8833 thermal testbed | ESP32-S3 um_feathers3 | No | Yes (AMG8833 disabled, see below) | N/A |
+| `co2sensor` | SCD41 CO2 + AMG8833 thermal testbed | ESP32-S3 um_feathers3 | No | Yes (AMG8833 rewritten 2026-08-02, see below) | N/A |
 | `co2tdisplay` | CO2 monitor with ST7789 display, workroom | ESP32-S2 featheresp32-s2 | No | Yes | N/A |
 | `feathers3um` | Feather S3 test platform | ESP32-S3 um_feathers3 | No | Yes | N/A |
 | `indoorgrowupper` | Grow tent upper — AMG8833 leaf temp + SCD40 + BME280 | ESP32 esp32thing_plus | No | Yes | N/A |
 | `litcontrol` | Boat multi-zone light controller | ESP32 featheresp32 | No | Yes | N/A |
-| `thinggrideye` | ESP32 Thing Plus — AMG8833 testbed | ESP32 esp32thing_plus | No | Yes (AMG8833 disabled, see below) | N/A |
+| `thinggrideye` | ESP32 Thing Plus — AMG8833 testbed | ESP32 esp32thing_plus | No | Yes (AMG8833 rewritten 2026-08-02, see below) | N/A |
 | `ttgottv` (`ttgoTTV.yaml`) | LilyGo TTV — OLED, RTC, battery ADC testbed | ESP32 esp32dev | No | Yes | N/A |
 | `powermeter` | Garage IR pulse-counter kWh meter + DHT sensors | ESP8266 wio_link | No | Yes | N/A |
 | `blaster` | IR blaster / FastLED relay | ESP32 lolin32 | No | Yes | N/A |
@@ -138,14 +138,9 @@ build_flags/unsupported `rmt_channel` key.
 ### 10. `custom` sensor/text_sensor platform removed entirely (`co2sensor`, `thinggrideye`)
 ESPHome dropped the old "inline lambda instantiates a raw component"
 escape hatch — a real `external_component` is required now. Both devices'
-AMG8833 8x8 thermal camera testbed wiring used this pattern. **Disabled**
-(commented out) rather than guessed at a rewrite, since these are
-explicitly-labeled testbeds with no other active sensors — also removed
-the now-orphaned `includes:`/`libraries:` entries, since with no sensor
-config left to pull in ESPHome's sensor headers, the raw AMG8833 header
-itself stopped compiling (`'Sensor' does not name a type`). **Needs a
-proper external_component rewrite to bring AMG8833 support back** on
-either device — flagging as follow-up work, not done here.
+AMG8833 8x8 thermal camera testbed wiring used this pattern; initially
+disabled (commented out) here, then rewritten as a proper native
+external_component as follow-up work — see "AMG8833 rewrite" below.
 
 ### 11. Abandoned/incompatible third-party Arduino library metadata (`ttgoTTV`)
 `libraries: [Rtc_Pcf8563]` was declared but **never actually referenced**
@@ -162,11 +157,6 @@ Cosmetic deprecation warning cleanup while already touching this file.
 
 ## Known blockers — left un-upgraded, on prior firmware
 
-Both of these are online and functioning today; I did **not** push a
-broken config to either. Both need an owner decision (see options below)
-rather than a guess on my part, since the "fix" changes runtime behavior
-on live hardware.
-
 ### `m5station.yaml` — M5Stack Station (192.168.178.221)
 The `m5stack/M5Station` Arduino library (unmaintained since 2022, only
 ever released as v0.0.1 on the PlatformIO registry — no newer version
@@ -175,30 +165,52 @@ exists) does raw ESP32 GPIO register access
 arduino-esp32/ESP-IDF 5.x no longer implicitly exposes that struct, and
 pinning an older core (`version: 2.0.14`) is rejected outright by ESPHome
 2026.7.2 ("Only Arduino 3.0+ is supported"). No config-level fix exists.
-
-Also blocked independently: the `github://pionizer/pionizer-axp192`
-external component `#include`s the Arduino-only `Esp.h`, which isn't
-available under the ESP-IDF-based build path external_components run
-through — a maintained, ESP-IDF-safe alternative exists
-(`eigger/espcomponents`'s `axp192` component, actively pushed as of
-2026-07-28), but its config schema and init sequence differ from the
-current one (no M5StickC-specific power-rail init routine that the
-current comment says "must be present to initialize TFT power on") —
-swapping it could change display power-on behavior on real hardware, so
-I didn't do it without your sign-off.
+This device's separate axp192 blocker (below) has been resolved, but this
+one hasn't — the device is still on prior firmware pending an owner
+decision.
 
 **Options:** (a) fork/patch `M5Station` to add the missing
 `#include "soc/gpio_struct.h"`, or (b) replace the TFT driver with a
 different, maintained library, or (c) leave this device on its current
 ESPHome version until one of the above happens.
 
-### `plantWaterer.yaml` — M5StickC Plant Waterer (192.168.178.226)
-Same root cause as above, second half: `github://martydingo/esphome-axp192`
-also `#include`s `Esp.h`, unavailable under the current ESP-IDF build path.
-**Options:** same as m5station's axp192 blocker above — fork/patch the
-component, or evaluate switching to `eigger/espcomponents`'s `axp192`
-(different schema, needs behavior verification), or leave on current
-firmware.
+## AMG8833 rewrite + axp192 migration (2026-08-02 follow-up)
+
+### `co2sensor.yaml`, `thinggrideye.yaml` — AMG8833 support rewritten as a native external_component
+Replaced the removed `custom:` platform hack with a proper local
+external_component at `components/amg8833/` (a hub `amg8833:` component +
+`sensor:`/`text_sensor:` platforms referencing it, matching the shape of
+core hub components like `ads1115`). It's a from-scratch native I2C
+register driver against the Panasonic Grid-EYE/AMG88xx datasheet — no
+longer depends on the unmaintained `SparkFun_GridEYE_Arduino_Library`
+Arduino library that had been pulled in via `libraries:`. Reproduces the
+original behavior: `temperature`/`max_temperature`/`min_temperature`/
+`avg_temperature`/`max_pixel_index`/`min_pixel_index` sensors, plus a
+`pixels` text_sensor. The pixel payload deliberately keeps the original's
+one-byte-per-pixel (not full 12-bit) base64 encoding — checked against the
+`TheRealWaldo/thermal` Home Assistant integration's decoder
+(`custom_components/thermal_vision/camera.py`, `_update_pixel_sensor`),
+which expects exactly that format, since this text_sensor is meant to
+feed that integration's thermal camera entity. Compiled clean for both
+boards; neither device is currently reachable to OTA-flash and verify
+against real hardware.
+
+### `m5station.yaml`, `plantWaterer.yaml` — axp192 migrated to `eigger/espcomponents`
+Both had been blocked on `Esp.h`-including axp192 forks incompatible with
+the ESP-IDF build path (`pionizer/pionizer-axp192` and
+`martydingo/esphome-axp192` respectively). Migrated both to
+`github://eigger/espcomponents`'s `axp192` component, which is
+ESP-IDF-safe and under active maintenance. Its schema changed from the
+old `sensor: platform: axp192` (with a `model:`/`brightness:` config) to a
+top-level `axp192:` hub domain with no `model:` key — its `setup()`
+unconditionally runs the standard M5Stack LDO2/LDO3 TFT power-on sequence
+(the same "must be present to initialize TFT power on" requirement the
+old libraries handled via their `model:` parameter), so behavior should
+be equivalent. `plantWaterer.yaml` now compiles clean end-to-end.
+`m5station.yaml`'s axp192 half is fixed too (confirmed by the build error
+moving cleanly past axp192 to the pre-existing, unrelated `M5Station`
+library issue documented above), but the device as a whole is still
+blocked by that separate issue.
 
 ## Known hardware issues found post-upgrade
 

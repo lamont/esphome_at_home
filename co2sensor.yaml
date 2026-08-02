@@ -4,11 +4,6 @@
 
 esphome:
   name: co2sensor
-  # AMG8833 includes/libraries removed: the `custom` sensor platform they
-  # relied on no longer exists upstream (see the disabled sensor/text_sensor
-  # blocks below), and with no active sensor: entries left the raw headers
-  # no longer compile (Sensor type isn't pulled in). Needs an external_component
-  # rewrite to bring the AMG8833 testbed back.
 
 esp32:
   board: um_feathers3
@@ -17,10 +12,18 @@ esp32:
     type: arduino
     version: recommended
 
+external_components:
+  - source:
+      type: local
+      path: components
+
 # Example configuration entry
 i2c:
   sda: GPIO8
   scl: GPIO9
+
+amg8833:
+  update_interval: 1s
 
 #display:
 #  - platform: ssd1306_i2c
@@ -70,60 +73,23 @@ mqtt:
   username: !secret mqtt_username
   password: !secret mqtt_password
 
-# The `custom` sensor/text_sensor platform used below was removed entirely
-# upstream (ESPHome now requires a real external_component, not an inline
-# lambda that registers a component instance). This testbed's AMG8833
-# wiring needs a proper external_component rewrite to come back online;
-# disabled for now so the rest of the device still compiles/upgrades.
-#text_sensor:
-#  - platform: custom
-#    lambda: |-
-#      auto amg8833 = new AMG8833CameraComponent();
-#      App.register_component(amg8833);
-#      return {amg8833};
-#    text_sensors:
-#      - name: "Sensor Pixels"
+text_sensor:
+  - platform: amg8833
+    pixels:
+      name: "Sensor Pixels"
 
-#binary_sensor:
-#  - platform: custom
-#    lambda: |-
-#      auto amg8833 = new AMG8833PersonDetectedComponent();
-#      App.register_component(amg8833);
-#      return {amg8833};
-#    binary_sensors:
-#      name: "Person Detected"
-#      device_class: occupancy
-
-#sensor:
-#  - platform: custom
-#    lambda: |-
-#      auto amg8833 = new AMG8833Component();
-#      App.register_component(amg8833);
-#      return {amg8833->sensor_temperature, amg8833->max_temperature, amg8833->min_temperature, amg8833->avg_temperature, amg8833->min_index, amg8833->max_index};
-#    sensors:
-#      - name: "Thermal Sensor Temperature"
-#        unit_of_measurement: °C
-#        device_class: temperature
-#        accuracy_decimals: 2
-#
-#      - name: "Thermal Sensor Max"
-#        unit_of_measurement: °C
-#        device_class: temperature
-#        accuracy_decimals: 2
-#
-#      - name: "Thermal Sensor Min"
-#        unit_of_measurement: °C
-#        device_class: temperature
-#        accuracy_decimals: 2
-#
-#      - name: "Thermal Sensor Avg"
-#        unit_of_measurement: °C
-#        device_class: temperature
-#        accuracy_decimals: 2
-#
-#      - name: "Thermal Sensor Min Index"
-#        accuracy_decimals: 0
-#
-#      - name: "Thermal Sensor Max Index"
-#        accuracy_decimals: 0
+sensor:
+  - platform: amg8833
+    temperature:
+      name: "Thermal Sensor Temperature"
+    max_temperature:
+      name: "Thermal Sensor Max"
+    min_temperature:
+      name: "Thermal Sensor Min"
+    avg_temperature:
+      name: "Thermal Sensor Avg"
+    min_pixel_index:
+      name: "Thermal Sensor Min Index"
+    max_pixel_index:
+      name: "Thermal Sensor Max Index"
 

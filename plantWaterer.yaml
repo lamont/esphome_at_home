@@ -18,8 +18,19 @@ logger:
     component: ERROR
 
 external_components:
-  - source: github://martydingo/esphome-axp192
+  - source: github://eigger/espcomponents
     components: [axp192]
+
+# AXP192 power management - must be present to initialize TFT power on
+# (its setup() unconditionally runs the standard M5Stack LDO2/LDO3 TFT
+# power-on sequence, so no model: key is needed the way the old library had)
+axp192:
+  address: 0x34
+  i2c_id: bus_a
+  update_interval: 30s
+  battery_level:
+    name: "${friendly_name} Battery Level"
+    id: "m5stick_batterylevel"
 
 status_led:
   pin:
@@ -71,16 +82,6 @@ binary_sensor:
 sensor:
   - platform: uptime
     name: "${friendly_name} Uptime"
-
-    # AXP192 power management - must be present to initialize TFT power on
-  - platform: axp192
-    model: M5STICKC
-    address: 0x34
-    i2c_id: bus_a
-    update_interval: 30s
-    battery_level:
-      name: "${friendly_name} Battery Level"
-      id: "m5stick_batterylevel"
 
   - platform: wifi_signal
     name: "${friendly_name} WiFi Signal"

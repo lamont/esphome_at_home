@@ -39,7 +39,7 @@ esp32:
 <<: !include .home.yaml
 
 external_components:
-  - source: github://pionizer/pionizer-axp192
+  - source: github://eigger/espcomponents
     components: [axp192]
 
 i2c:
@@ -51,6 +51,17 @@ i2c:
     scan: true
     sda: GPIO32
     scl: GPIO33
+
+# AXP192 power management - must be present to initialize TFT power on
+# (its setup() unconditionally runs the standard M5Stack LDO2/LDO3 TFT
+# power-on sequence, so no model: key is needed the way the old library had)
+axp192:
+  i2c_id: bus_int
+  address: 0x34
+  update_interval: 15s
+  battery_level:
+    id: "m5_station_battery_level"
+    name: "Drying m5station Bat"
 
 spi:
   clk_pin: GPIO18
@@ -179,15 +190,6 @@ sensor:
           window_size: 15
           send_every: 7
           send_first_at: 3
-  - platform: axp192
-    model: m5stickc # turns on LDO3
-    i2c_id: bus_int
-    address: 0x34
-    brightness: 100%
-    update_interval: 15s
-    battery_level:
-      id: "m5_station_battery_level"
-      name: "Drying m5station Bat"
   - platform: mpu6886
     address: 0x68
     i2c_id: bus_int
