@@ -57,12 +57,19 @@ int16_t AMG8833Component::read_raw_(uint8_t reg) {
   return int16_t(magnitude_and_sign);
 }
 
+bool AMG8833Component::get_frame(GridFrame &out) {
+  LockGuard guard(this->frame_lock_);
+  out = this->frame_;
+  return out.valid;
+}
+
 void AMG8833Component::update() {
   if (this->setup_failed_) {
     this->status_set_error();
     return;
   }
 
+  GridFrame frame{};
   float min_temp = 0, max_temp = 0, avg_temp = 0;
   uint8_t min_index = 0, max_index = 0;
   std::string pixel_bytes;
@@ -73,6 +80,7 @@ void AMG8833Component::update() {
   for (uint8_t i = 0; i < AMG8833_PIXEL_COUNT; i++) {
     int16_t raw = this->read_raw_(REG_PIXEL_OFFSET + i * 2);
     float temp = raw * PIXEL_TEMP_LSB;
+    frame.pixels[i] = temp;
     if (i == 0 || temp > max_temp) {
       max_temp = temp;
       max_index = i;
@@ -92,6 +100,23 @@ void AMG8833Component::update() {
   avg_temp /= AMG8833_PIXEL_COUNT;
 
   float device_temp = this->read_raw_(REG_TTHL) * THERMISTOR_TEMP_LSB;
+
+  frame.min_temp = min_temp;
+  frame.max_temp = max_temp;
+  frame.avg_temp = avg_temp;
+  frame.device_temp = device_temp;
+  frame.min_index = min_index;
+  frame.max_index = max_index;
+  frame.valid = true;
+  {
+    LockGuard guard(this->frame_lock_);
+    this->frame_ = frame;
+  }
+
+  for (uint8_t i = 0; i < AMG8833_PIXEL_COUNT; i++) {
+    if (this->pixel_sensors_[i] != nullptr)
+      this->pixel_sensors_[i]->publish_state(frame.pixels[i]);
+  }
 
   if (this->temperature_sensor_ != nullptr)
     this->temperature_sensor_->publish_state(device_temp);

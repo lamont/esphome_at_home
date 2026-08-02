@@ -23,6 +23,18 @@ i2c:
 amg8833:
   update_interval: 1s
 
+# Live 8x8 heatmap at http://thinggrideye/grid (data at /grid.json).
+# Refresh rate is capped by the amg8833 update_interval above.
+amg8833_web:
+
+web_server:
+  port: 80
+  local: true
+
+# /metrics — include_internal picks up the 64 per-pixel sensors below
+prometheus:
+  include_internal: true
+
 # Enable logging
 logger:
 
@@ -48,6 +60,15 @@ text_sensor:
   - platform: amg8833
     pixels:
       name: "Sensor Pixels"
+  - platform: version
+    name: "ESPHome Version"
+  - platform: wifi_info
+    ip_address:
+      name: "IP Address"
+    ssid:
+      name: "SSID"
+    mac_address:
+      name: "MAC Address"
 
 sensor:
   - platform: amg8833
@@ -63,4 +84,14 @@ sensor:
       name: "Thermal Sensor Min Index"
     max_pixel_index:
       name: "Thermal Sensor Max Index"
+    # Expands to 64 internal sensors "Pixel 0".."Pixel 63" — kept out of
+    # HA/MQTT, exported to /metrics via prometheus include_internal.
+    pixels:
+      name: "Pixel"
+  - platform: wifi_signal
+    name: "WiFi Signal"
+    update_interval: 60s
+  - platform: uptime
+    name: "Uptime"
+    update_interval: 60s
 
