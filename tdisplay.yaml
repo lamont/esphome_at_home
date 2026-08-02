@@ -1,7 +1,10 @@
 esphome:
   name: tdisplay
-  platform: ESP32
+
+esp32:
   board: featheresp32
+  framework:
+    type: arduino
 
 wifi:
   ssid: !secret wifi_ssid
@@ -15,6 +18,7 @@ logger:
 api:
 
 ota:
+  platform: esphome
   password: !secret ota_password
 
 color:
@@ -71,7 +75,9 @@ binary_sensor:
 # We can still control the backlight independently
 switch:
   - platform: gpio
-    pin: GPIO4
+    pin:
+      number: GPIO4
+      allow_other_uses: true
     name: "Backlight"
     id: backlight
 
@@ -97,7 +103,14 @@ i2c:
 
 display:
   - platform: st7789v
-    backlight_pin: GPIO4
+    model: Custom
+    height: 240
+    width: 135
+    offset_height: 0
+    offset_width: 0
+    backlight_pin:
+      number: GPIO4
+      allow_other_uses: true
     cs_pin: GPIO5
     dc_pin: GPIO16
     reset_pin: GPIO23

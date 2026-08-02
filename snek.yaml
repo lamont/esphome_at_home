@@ -1,12 +1,13 @@
 esphome:
   name: snek
-  platform: ESP8266
-  board: wio_link
   # GPIO15 needs to be on for the grove bus to get power
   on_boot:
     priority: 99
     then:
       - output.turn_on: 'grove_power_supply'
+
+esp8266:
+  board: wio_link
 
 <<: !include .home.yaml
 

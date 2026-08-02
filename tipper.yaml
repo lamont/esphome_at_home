@@ -3,13 +3,14 @@ substitutions:
 
 esphome:
   name: $devicename
-  platform: ESP8266
-  board: wio_link
   # GPIO15 needs to be on for the grove bus to get power
   on_boot:
     priority: 99
     then:
       - switch.turn_on: 'grove_power_supply'
+
+esp8266:
+  board: wio_link
 
 # Example configuration entry
 sensor:
@@ -25,7 +26,7 @@ sensor:
     update_interval: '10s'
     unit_of_measurement: 's'
     filters:
-      - lambda: return (id(sntp_time).now()).time;
+      - lambda: return (id(sntp_time).now()).timestamp;
   - platform: wifi_signal
     name: "${devicename} WiFi Signal Sensor"
     update_interval: 10s
@@ -53,6 +54,7 @@ deep_sleep:
 logger:
 
 ota:
+  platform: esphome
 
 time:
   - platform: sntp

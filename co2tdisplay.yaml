@@ -21,6 +21,7 @@ logger:
 api:
 
 ota:
+  platform: esphome
   password: !secret ota_password
 
 color:
@@ -67,12 +68,6 @@ binary_sensor:
       mode: INPUT_PULLUP
     name: "T-Display Button Input 0"
     id: tdisplay_button_input_0
-  - platform: gpio
-    pin:
-      number: GPIO35
-      inverted: true
-    name: "T-Display Button Input 1"
-    id: tdisplay_button_input_1
 
 # We can still control the backlight independently
 switch:

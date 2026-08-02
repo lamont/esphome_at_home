@@ -1,18 +1,24 @@
 esphome:
   name: powermeter
-  platform: ESP8266
-  board: wio_link
   # GPIO15 needs to be on for the grove bus to get power
   on_boot:
     priority: -10
     then:
       - switch.turn_on: 'grove_power_supply'
 
+esp8266:
+  board: wio_link
+
 # Example configuration entry
 sensor:
   - platform: dht
     model: DHT11
-    pin: GPIO13
+    pin:
+      number: GPIO13
+      # shared with the pulse_counter below in the original wiring; unclear
+      # if intentional but preserving prior (pre-2026) behavior rather than
+      # guessing a different physical pin. Needs owner verification.
+      allow_other_uses: true
     temperature:
       name: "Garage Temperature"
     humidity:
@@ -29,7 +35,9 @@ sensor:
     humidity:
       name: "Weed Humidity"
   - platform: pulse_counter
-    pin: GPIO13
+    pin:
+      number: GPIO13
+      allow_other_uses: true
     unit_of_measurement: 'watts'
     name: 'Power Meter'
     filters:
@@ -55,3 +63,4 @@ mqtt:
 logger:
 
 ota:
+  platform: esphome

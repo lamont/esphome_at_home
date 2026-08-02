@@ -26,6 +26,15 @@ esp32:
   board: m5stack-station
   framework:
     type: arduino
+    # KNOWN BROKEN as of ESPHome 2026.7.2: the m5stack/M5Station library
+    # (unmaintained since 2022, only ever released as v0.0.1) does raw
+    # GPIO struct register access (`GPIO.out_w1ts = ...`) in
+    # src/utility/In_eSPI.h that no longer compiles under current
+    # arduino-esp32/ESP-IDF 5.x — the implicit gpio_struct.h include it
+    # relied on is gone, and pinning an older core is rejected outright
+    # ("Only Arduino 3.0+ is supported"). No config-level fix exists;
+    # needs either a patched fork of the library or a different TFT
+    # driver. See UPGRADING.md.
 
 <<: !include .home.yaml
 

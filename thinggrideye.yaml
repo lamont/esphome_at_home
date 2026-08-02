@@ -3,15 +3,16 @@
 
 esphome:
   name: thinggrideye
-  includes:
-    - includes/AMG8833-ESPHOME/amg8833.h
-    - includes/AMG8833-ESPHOME/amg8833_camera.h
-    #- includes/AMG8833-ESPHOME/amg8833_person_detected.h
-  libraries:
-    - "Wire"
-    - "SparkFun GridEYE AMG88 Library"
+  # AMG8833 includes/libraries removed: the `custom` sensor platform they
+  # relied on no longer exists upstream (see the disabled sensor/text_sensor
+  # blocks below), and with no active sensor: entries left the raw headers
+  # no longer compile (Sensor type isn't pulled in). Needs an external_component
+  # rewrite to bring the AMG8833 testbed back.
+
 esp32:
   board: esp32thing_plus
+  framework:
+    type: arduino
 
 i2c:
   scan: true
@@ -26,6 +27,7 @@ logger:
 api:
 
 ota:
+  platform: esphome
   password: !secret ota_password
 
 wifi:
@@ -39,14 +41,19 @@ mqtt:
   username: !secret mqtt_username
   password: !secret mqtt_password
 
-text_sensor:
-  - platform: custom
-    lambda: |-
-      auto amg8833 = new AMG8833CameraComponent();
-      App.register_component(amg8833);
-      return {amg8833};
-    text_sensors:
-      - name: "Sensor Pixels"
+# The `custom` sensor/text_sensor platform used below was removed entirely
+# upstream (ESPHome now requires a real external_component, not an inline
+# lambda that registers a component instance). This testbed's AMG8833
+# wiring needs a proper external_component rewrite to come back online;
+# disabled for now so the rest of the device still compiles/upgrades.
+#text_sensor:
+#  - platform: custom
+#    lambda: |-
+#      auto amg8833 = new AMG8833CameraComponent();
+#      App.register_component(amg8833);
+#      return {amg8833};
+#    text_sensors:
+#      - name: "Sensor Pixels"
 
 #binary_sensor:
 #  - platform: custom
@@ -58,41 +65,41 @@ text_sensor:
 #      name: "Person Detected"
 #      device_class: occupancy
 
-sensor:
+#sensor:
 #  - platform: thermal_vision
 #    name: Prototype Thermal Camera
 #    overlay: true
 #    pixel_sensor: sensor.sensor_pixels
 #    auto_range: true
-  - platform: custom
-    lambda: |-
-      auto amg8833 = new AMG8833Component();
-      App.register_component(amg8833);
-      return {amg8833->sensor_temperature, amg8833->max_temperature, amg8833->min_temperature, amg8833->avg_temperature, amg8833->min_index, amg8833->max_index};
-    sensors:
-      - name: "Thermal Sensor Temperature"
-        unit_of_measurement: °C
-        device_class: temperature
-        accuracy_decimals: 2
-
-      - name: "Thermal Sensor Max"
-        unit_of_measurement: °C
-        device_class: temperature
-        accuracy_decimals: 2
-
-      - name: "Thermal Sensor Min"
-        unit_of_measurement: °C
-        device_class: temperature
-        accuracy_decimals: 2
-
-      - name: "Thermal Sensor Avg"
-        unit_of_measurement: °C
-        device_class: temperature
-        accuracy_decimals: 2
-
-      - name: "Thermal Sensor Min Index"
-        accuracy_decimals: 0
-
-      - name: "Thermal Sensor Max Index"
-        accuracy_decimals: 0
+#  - platform: custom
+#    lambda: |-
+#      auto amg8833 = new AMG8833Component();
+#      App.register_component(amg8833);
+#      return {amg8833->sensor_temperature, amg8833->max_temperature, amg8833->min_temperature, amg8833->avg_temperature, amg8833->min_index, amg8833->max_index};
+#    sensors:
+#      - name: "Thermal Sensor Temperature"
+#        unit_of_measurement: °C
+#        device_class: temperature
+#        accuracy_decimals: 2
+#
+#      - name: "Thermal Sensor Max"
+#        unit_of_measurement: °C
+#        device_class: temperature
+#        accuracy_decimals: 2
+#
+#      - name: "Thermal Sensor Min"
+#        unit_of_measurement: °C
+#        device_class: temperature
+#        accuracy_decimals: 2
+#
+#      - name: "Thermal Sensor Avg"
+#        unit_of_measurement: °C
+#        device_class: temperature
+#        accuracy_decimals: 2
+#
+#      - name: "Thermal Sensor Min Index"
+#        accuracy_decimals: 0
+#
+#      - name: "Thermal Sensor Max Index"
+#        accuracy_decimals: 0
 

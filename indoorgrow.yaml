@@ -60,7 +60,7 @@ sensor:
     address: 0x5B
     update_interval: 15s
     # temperature: external temperature sensor ID
-  - platform: bme280
+  - platform: bme280_i2c
     temperature:
       name: "Weed Undercanopy BME280 Temperature"
       id: bme_temp
@@ -110,4 +110,5 @@ logger:
 api:
 
 ota:
+  platform: esphome
   password: !secret ota_password

@@ -26,8 +26,11 @@ text_sensor:
 
 esphome:
   name: ble0
-  platform: ESP32
+
+esp32:
   board: esp32-poe
+  framework:
+    type: arduino
 
 ethernet:
   type: LAN8720
@@ -49,4 +52,5 @@ mqtt:
   password: !secret mqtt_password
 
 ota:
+  platform: esphome
   password: !secret ota_password

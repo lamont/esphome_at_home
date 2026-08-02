@@ -67,15 +67,18 @@ esphome:
   name: ttgottv
   libraries:
     - Wire
-    - Rtc_Pcf8563
+    # Rtc_Pcf8563 removed: unused (nothing in this config references it —
+    # time comes from the `homeassistant` time platform below) and its
+    # library.properties metadata claims atmelavr-only, which the current
+    # ESPHome/platformio library conversion now enforces and rejects for
+    # esp32. Use the native `pcf8563` time component if the RTC chip is
+    # ever actually wired up.
 
 esp32:
   board: esp32dev
   variant: esp32
-#  framework:
-#    type: arduino
-#    version: 2.0.4
-#    platform_version: 4.3.0
+  framework:
+    type: arduino
 
 font:
   - file: "fonts/Helvetica.ttf"
@@ -114,6 +117,7 @@ interval:
 logger:
 
 ota:
+  platform: esphome
   password: !secret ota_password
 
 output:

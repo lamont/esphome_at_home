@@ -1,17 +1,22 @@
 esphome:
   name: soils
-  platform: esp32
+
+esp32:
   board: pocket_32
-  arduino_version: 1.0.2
+  framework:
+    type: arduino
 
 ota:
+  platform: esphome
 
 # some sensors
 sensor:
   - platform: adc
     name: Battery Voltage
-    pin: GPIO35
-    attenuation: 11db
+    pin:
+      number: GPIO35
+      allow_other_uses: true
+    attenuation: 12db
     filters:
       - multiply: 2
     update_interval: 10s
@@ -20,8 +25,10 @@ sensor:
   - platform: adc
     name: Battery Percent
     unit_of_measurement: '%'
-    pin: GPIO35
-    attenuation: 11db
+    pin:
+      number: GPIO35
+      allow_other_uses: true
+    attenuation: 12db
     update_interval: 10s
     filters:
       - multiply: 2
@@ -35,7 +42,7 @@ sensor:
     name: last_update
     update_interval: '10s'
     filters:
-      - lambda: return (id(sntp_time).now()).time;
+      - lambda: return (id(sntp_time).now()).timestamp;
 
 wifi:
   ssid: !secret wifi_ssid

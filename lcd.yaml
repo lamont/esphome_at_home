@@ -1,12 +1,13 @@
-esphomeyaml:
+esphome:
   name: lcd
-  platform: ESP8266
-  board: wio_link
   # GPIO15 needs to be on for the grove bus to get power
   on_boot:
     priority: -10
     then:
       - switch.turn_on: 'grove_power_supply'
+
+esp8266:
+  board: wio_link
 
 # GPIO5 (SCL) and GPIO4 (SDA) for the ESP8266 and wio_link
 #i2c:
@@ -38,3 +39,4 @@ mqtt:
 logger:
 
 ota:
+  platform: esphome

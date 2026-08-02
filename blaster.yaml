@@ -3,8 +3,11 @@
 
 esphome:
   name: blaster
-  platform: ESP32 
+
+esp32:
   board: lolin32
+  framework:
+    type: arduino
 
 
 web_server:
@@ -56,6 +59,7 @@ mqtt:
 logger:
 
 ota:
+  platform: esphome
 
 api:
 

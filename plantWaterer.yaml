@@ -25,6 +25,7 @@ status_led:
   pin:
     number: GPIO10
     inverted: true
+    allow_other_uses: true
 
 spi:
   clk_pin: GPIO13
@@ -114,6 +115,7 @@ switch:
     pin:
       number: GPIO10
       inverted: true
+      allow_other_uses: true
     id: led1
   - platform: gpio
     pin: GPIO32
