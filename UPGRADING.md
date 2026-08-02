@@ -212,6 +212,15 @@ moving cleanly past axp192 to the pre-existing, unrelated `M5Station`
 library issue documented above), but the device as a whole is still
 blocked by that separate issue.
 
+**`plantWaterer.yaml` OTA-flashed and verified live (2026-08-02):** boot
+log showed a clean I2C scan (devices found at 0x34 AXP192, 0x51, 0x68 —
+the expected M5StickC PMIC/RTC/accelerometer addresses), the ST7735
+display initialized without error, and the AXP192 component started
+publishing a battery-level reading (~100%, consistent with its own
+known-rough battery curve — see the "To be fixed" comment in its
+upstream source, not something introduced here). No errors or FAILED
+markers anywhere in the boot sequence.
+
 ## Known hardware issues found post-upgrade
 
 ### `snek.yaml` — Grove-bus sensors dead, needs physical inspection (2026-08-01)
