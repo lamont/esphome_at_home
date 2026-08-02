@@ -35,7 +35,7 @@ and compiling clean. Full inventory, reachability, and compile status below.
 | `feathers3um` | Feather S3 test platform | ESP32-S3 um_feathers3 | No | Yes | N/A |
 | `indoorgrowupper` | Grow tent upper — AMG8833 leaf temp + SCD40 + BME280 | ESP32 esp32thing_plus | No | Yes | N/A |
 | `litcontrol` | Boat multi-zone light controller | ESP32 featheresp32 | No | Yes | N/A |
-| `thinggrideye` | ESP32 Thing Plus — AMG8833 testbed | ESP32 esp32thing_plus | No | Yes (AMG8833 rewritten 2026-08-02, see below) | N/A |
+| `thinggrideye` | ESP32 Thing Plus — AMG8833 testbed | ESP32 esp32thing_plus | **Yes** (192.168.178.172, found on USB 2026-08-02) | Yes (AMG8833 rewritten + verified live, see below) | **Yes** (USB) ✅ |
 | `ttgottv` (`ttgoTTV.yaml`) | LilyGo TTV — OLED, RTC, battery ADC testbed | ESP32 esp32dev | No | Yes | N/A |
 | `powermeter` | Garage IR pulse-counter kWh meter + DHT sensors | ESP8266 wio_link | No | Yes | N/A |
 | `blaster` | IR blaster / FastLED relay | ESP32 lolin32 | No | Yes | N/A |
@@ -220,6 +220,31 @@ publishing a battery-level reading (~100%, consistent with its own
 known-rough battery curve — see the "To be fixed" comment in its
 upstream source, not something introduced here). No errors or FAILED
 markers anywhere in the boot sequence.
+
+**`thinggrideye.yaml` USB-flashed and verified live (2026-08-02):** this
+device turned up attached over USB serial (`/dev/cu.usbserial-20340`,
+identified as a CP2102N — same interface chip as the ESP32 Thing Plus).
+Confirmed its identity before touching anything: an `esptool chip-id`
+read back a genuine ESP32-D0WD, and a passive serial log showed the
+*currently installed* firmware self-identifying via WiFi hostname/mDNS/
+MQTT topic prefix/OTA address as `thinggrideye`, still running its
+original firmware from **before** this repo's ESPHome upgrade work
+(`ESPHome version 2022.6.2 compiled Jul 31 2022`) — this device just
+hadn't been powered on during the original 2026-08-01 reachability check,
+so it never got the earlier fleet upgrade or today's AMG8833 rewrite.
+That old firmware's own boot log also confirmed the AMG8833 is wired at
+I2C address 0x69, matching this component's default.
+
+Flashed over USB (safer than OTA given the large version jump) rather
+than over the air. New firmware booted clean: AMG8833 found at 0x69, no
+FAILED markers, config dump matched exactly. Connected over the network
+API afterward (now that it's on the current firmware and the API works)
+and watched live sensor updates for ~15s: device temperature steady
+around 25.7°C, pixel min/max in the 21.75–28.75°C range, indices moving
+update-to-update as expected for a live thermal scene — closely matching
+the old firmware's last reading (25.3°C) from the same room moments
+earlier. Confirms the native register-level rewrite is reading the
+sensor correctly, not just compiling.
 
 ## Known hardware issues found post-upgrade
 
