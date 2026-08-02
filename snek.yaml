@@ -1,10 +1,18 @@
 esphome:
   name: snek
   # GPIO15 needs to be on for the grove bus to get power
+  # NEEDS PHYSICAL INSPECTION (2026-08-01): all Grove-bus sensors (3x DHT +
+  # SHT3x over I2C) are dead - I2C scan finds no devices, DHTs report
+  # "Communication failed". Confirmed this isn't a config issue: reverted
+  # from output/INPUT_PULLUP back to this switch/gpio pattern (matching
+  # every other wio_link device in the fleet) and re-flashed; sensors still
+  # dead on the next boot with an identical failure signature. Likely a
+  # failed Grove power-gate transistor or a corroded/disconnected Grove hub
+  # connector - check for corrosion, this device lives in a snake enclosure.
   on_boot:
     priority: 99
     then:
-      - output.turn_on: 'grove_power_supply'
+      - switch.turn_on: 'grove_power_supply'
 
 esp8266:
   board: wio_link
@@ -52,11 +60,9 @@ i2c:
   scan: True
   id: bus_a
 
-output:
+switch:
   - platform: gpio
-    pin:
-      number: GPIO15
-      mode: INPUT_PULLUP
+    pin: GPIO15
     id: 'grove_power_supply'
 
 

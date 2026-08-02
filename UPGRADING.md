@@ -200,6 +200,26 @@ component, or evaluate switching to `eigger/espcomponents`'s `axp192`
 (different schema, needs behavior verification), or leave on current
 firmware.
 
+## Known hardware issues found post-upgrade
+
+### `snek.yaml` — Grove-bus sensors dead, needs physical inspection (2026-08-01)
+All Grove-bus sensors (3x DHT temp/humidity + SHT3x over I2C) are reporting
+failures: I2C scan finds no devices, the SHT3x component is marked FAILED,
+and every DHT logs "Communication failed" → `nan`. This is not a config
+issue — `snek` had been migrated from `switch: platform: gpio` (the pattern
+every other `wio_link` device in the fleet still uses) to `output: platform:
+gpio` with `mode: INPUT_PULLUP` on the GPIO15 power-gate pin, which looked
+like a plausible regression. Reverted to the original `switch`-based pattern
+and re-flashed via OTA to test; the identical failure persisted on the next
+boot with the switch component and `on_boot: switch.turn_on` both verified
+correct in the compiled config. Since two different, both previously-valid
+pin-drive configs fail identically on the same hardware, **this needs a
+physical inspection** — most likely a failed Grove power-gate transistor on
+the Wio Link board, or a corroded/disconnected Grove hub connector (this
+device lives in a snake enclosure, i.e. a humid environment). Left the
+config on the simpler/fleet-consistent `switch` pattern regardless, since
+it's a strict improvement even though it didn't fix the sensors.
+
 ## Not upgraded — not an ESPHome device
 
 `loraWatch.yaml` documents pin connections for a LilyGo TTGO T-Wristband,
